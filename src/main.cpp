@@ -34,7 +34,7 @@ void update(const float deltaTime) {
   asw::core::update();
 
   // Do state logic
-game_state->update(deltaTime);
+  game_state->update(deltaTime);
 
   // Handle exit
   if (game_state->getStateId() == ProgramState::Exit) {
@@ -56,7 +56,7 @@ void loop() {
 #endif
 
 // Main function*/
-auto main(int argc, char* argv[]) -> int {
+auto main() -> int {
   // Setup basic functionality
   setup();
 

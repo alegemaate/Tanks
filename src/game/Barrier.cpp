@@ -3,12 +3,13 @@
 #include <memory>
 
 #include "../system/ImageRegistry.hpp"
-#include "../util/Random.hpp"
 
 asw::Sample Barrier::sample_explode;
 
-Barrier::Barrier(World* world, const Vec2<float>& position, BarrierType type)
-    : position(position), worldPointer(world) {
+Barrier::Barrier(World* world,
+                 const asw::Vec2<float>& position,
+                 BarrierType type)
+    : transform(position.x, position.y, 0, 0), worldPointer(world) {
   switch (type) {
     case BarrierType::BOX:
       this->image = ImageRegistry::getImage("block-box");
@@ -20,10 +21,7 @@ Barrier::Barrier(World* world, const Vec2<float>& position, BarrierType type)
       break;
   }
 
-  auto size = asw::util::getTextureSize(this->image);
-
-  this->width = static_cast<float>(size.x);
-  this->height = static_cast<float>(size.y);
+  transform.size = asw::util::getTextureSize(this->image);
 
   if (Barrier::sample_explode == nullptr) {
     Barrier::sample_explode = asw::assets::loadSample("assets/sfx/explode.wav");
@@ -31,7 +29,7 @@ Barrier::Barrier(World* world, const Vec2<float>& position, BarrierType type)
 }
 
 // Update
-void Barrier::update(const std::vector<Bullet*>* bullets) {
+void Barrier::update(std::vector<Bullet>& bullets) {
   if (health <= 0 && !exploded) {
     explode();
     exploded = true;
@@ -41,34 +39,37 @@ void Barrier::update(const std::vector<Bullet*>* bullets) {
     return;
   }
 
-  for (auto* const& bullet : *bullets) {
-    if (collisionAny(position.x, position.x + width, bullet->getX(),
-                     bullet->getX() + 5, position.y, position.y + height,
-                     bullet->getY(), bullet->getY() + 5)) {
-      if (collisionBottom(bullet->getY() + bullet->getYVelocity(),
-                          bullet->getY() + 5, position.y + height)) {
-        bullet->reverseDirection("y");
-        bullet->bounce(BounceDirection::BOTTOM);
+  for (auto& bullet : bullets) {
+    if (collisionAny(transform.position.x,
+                     transform.position.x + transform.size.x, bullet.getX(),
+                     bullet.getX() + 5, transform.position.y,
+                     transform.position.y + transform.size.y, bullet.getY(),
+                     bullet.getY() + 5)) {
+      if (collisionBottom(bullet.getY() + bullet.getYVelocity(),
+                          bullet.getY() + 5,
+                          transform.position.y + transform.size.y)) {
+        bullet.reverseDirection("y");
+        bullet.bounce(BounceDirection::BOTTOM);
       }
 
-      if (collisionTop(bullet->getY(),
-                       bullet->getY() + 5 + bullet->getYVelocity(),
-                       position.y)) {
-        bullet->reverseDirection("y");
-        bullet->bounce(BounceDirection::TOP);
+      if (collisionTop(bullet.getY(), bullet.getY() + 5 + bullet.getYVelocity(),
+                       transform.position.y)) {
+        bullet.reverseDirection("y");
+        bullet.bounce(BounceDirection::TOP);
       }
 
-      if (collisionLeft(bullet->getX(),
-                        bullet->getX() + 5 + bullet->getXVelocity(),
-                        position.x)) {
-        bullet->reverseDirection("x");
-        bullet->bounce(BounceDirection::LEFT);
+      if (collisionLeft(bullet.getX(),
+                        bullet.getX() + 5 + bullet.getXVelocity(),
+                        transform.position.x)) {
+        bullet.reverseDirection("x");
+        bullet.bounce(BounceDirection::LEFT);
       }
 
-      if (collisionRight(bullet->getX() + bullet->getXVelocity(),
-                         bullet->getX() + 5, position.x + width)) {
-        bullet->reverseDirection("x");
-        bullet->bounce(BounceDirection::RIGHT);
+      if (collisionRight(bullet.getX() + bullet.getXVelocity(),
+                         bullet.getX() + 5,
+                         transform.position.x + transform.size.x)) {
+        bullet.reverseDirection("x");
+        bullet.bounce(BounceDirection::RIGHT);
       }
 
       if (!indestructible) {
@@ -79,21 +80,20 @@ void Barrier::update(const std::vector<Bullet*>* bullets) {
 }
 
 // Draw image
-void Barrier::draw() {
+void Barrier::draw() const {
   if (health > 0) {
-    asw::draw::sprite(image, static_cast<int>(position.x),
-                      static_cast<int>(position.y));
+    asw::draw::sprite(image, transform.position);
   }
 }
 
 // Get width
 float Barrier::getWidth() const {
-  return width;
+  return transform.size.x;
 }
 
 // Get height
 float Barrier::getHeight() const {
-  return height;
+  return transform.size.y;
 }
 
 // Check if it needs cleanup
@@ -101,8 +101,8 @@ bool Barrier::getDead() const {
   return !indestructible && health <= 0;
 }
 
-Vec2<float> Barrier::getPosition() const {
-  return this->position;
+asw::Vec2<float> Barrier::getPosition() const {
+  return this->transform.position;
 }
 
 // Explode
@@ -111,13 +111,14 @@ void Barrier::explode() {
   asw::sound::play(sample_explode, 255, 127, 0);
 
   for (int i = 0; i < 100; i++) {
-    asw::Color color = asw::util::makeColor(255, Random::random(0, 255), 0);
+    asw::Color color =
+        asw::util::makeColor(255, asw::random::between(0, 255), 0);
 
     // Make sure not transparent (they show as white)
     // do { TODO
     //   // position of colour
-    //   int randomY = Random::random(0, static_cast<int>(height));
-    //   int randomX = Random::random(0, static_cast<int>(width));
+    //   int randomY = asw::random::between(0, static_cast<int>(height));
+    //   int randomX = asw::random::between(0, static_cast<int>(width));
 
     //   // New colour
     //   color = getpixel(image, randomY, randomX);
@@ -125,8 +126,9 @@ void Barrier::explode() {
 
     // Make particle
     auto particle = std::make_shared<Particle>(
-        position.x + width / 2.0f, position.y + height / 2.0f, color, -6.0, 6.0,
-        -6.0, 6.0, 2, ParticleType::SQUARE, 30, ParticleBehaviour::EXPLODE);
+        transform.position.x + transform.size.x / 2.0f,
+        transform.position.y + transform.size.y / 2.0f, color, -6.0, 6.0, -6.0,
+        6.0, 2, ParticleType::SQUARE, 30, ParticleBehaviour::EXPLODE);
 
     worldPointer->addParticle(particle);
   }

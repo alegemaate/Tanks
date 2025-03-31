@@ -2,8 +2,6 @@
 
 #include <cmath>
 
-#include "Random.hpp"
-
 // Collision
 bool collisionAny(float xMin1,
                   float xMax1,

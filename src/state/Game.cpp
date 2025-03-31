@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "../system/ImageRegistry.hpp"
-#include "../util/Random.hpp"
 
 unsigned char Game::map_width = 20;
 unsigned char Game::map_height = 20;
@@ -23,9 +22,6 @@ void Game::init() {
   asw::draw::clearColor(asw::util::makeColor(0, 0, 0, 255));
   asw::display::resetRenderTarget();
   asw::draw::setBlendMode(decal_buffer, asw::BlendMode::ADD);
-
-  vision_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
-  asw::draw::setBlendMode(vision_buffer, asw::BlendMode::ADD);
 
   map_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
 
@@ -62,7 +58,7 @@ void Game::init() {
               map_temp[i + 1][t - 1] == BarrierType::NONE &&
               map_temp[i][t - 1] == BarrierType::NONE &&
               map_temp[i][t + 1] == BarrierType::NONE &&
-              Random::random(0, 2) == 1) {
+              asw::random::between(0, 2) == 1) {
             map_temp[i][t] = BarrierType::STONE;
           }
         }
@@ -87,7 +83,7 @@ void Game::init() {
         // Pass 5 (Boxes!)
         else if (pass == 5) {
           if (map_temp[i][t] == BarrierType::NONE &&
-              Random::random(1, 20) == 1) {
+              asw::random::between(1, 20) == 1) {
             map_temp[i][t] = BarrierType::BOX;
           }
         }
@@ -99,14 +95,13 @@ void Game::init() {
         }
         // Pass 7 (create barriers)
         else if (pass == 7 && map_temp[i][t] != BarrierType::NONE) {
-          auto position = Vec2<float>(i * 40, t * 40);
-          auto* barrier = new Barrier(&game_world, position, map_temp[i][t]);
+          auto position = asw::Vec2<float>(i * 40, t * 40);
+          auto& barrier =
+              barriers.emplace_back(&game_world, position, map_temp[i][t]);
 
           if (i == 0 || t == 0 || i == map_width - 1 || t == map_height - 1) {
-            barrier->makeIndestructible(true);
+            barrier.makeIndestructible(true);
           }
-
-          barriers.emplace_back(barrier);
         }
       }
     }
@@ -114,8 +109,8 @@ void Game::init() {
 
   // Player
   {
-    Vec2<float> startLocation = startLocations.at(
-        Random::random(0, static_cast<int>(startLocations.size()) - 1));
+    const asw::Vec2<float> startLocation = startLocations.at(
+        asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
     auto* tank = new PlayerTank(&game_world, startLocation.x, startLocation.y,
                                 100, 4, 700, 1);
 
@@ -126,11 +121,12 @@ void Game::init() {
 
   // Enemies
   for (unsigned char i = 0; i < num_enemies; i++) {
-    Vec2<float> startLocation = startLocations.at(
-        Random::random(0, static_cast<int>(startLocations.size()) - 1));
-    auto* tank = new AiTank(&game_world, startLocation.x, startLocation.y,
-                            Random::random(50, 150), Random::random(1, 8),
-                            Random::random(500, 1500), 1, true);
+    const asw::Vec2<float> startLocation = startLocations.at(
+        asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
+    auto* tank =
+        new AiTank(&game_world, startLocation.x, startLocation.y,
+                   asw::random::between(50, 150), asw::random::between(1, 8),
+                   asw::random::between(500.0F, 1500.0F), 1, true);
 
     tank->process_enemies(&player_tanks);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
@@ -139,14 +135,12 @@ void Game::init() {
 
   // Friends
   for (unsigned char i = 0; i < num_friends; i++) {
-    Vec2<float> startLocation = startLocations.at(
-        Random::random(0, static_cast<int>(startLocations.size()) - 1));
+    const asw::Vec2<float> startLocation = startLocations.at(
+        asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
     auto* tank = new AiTank(&game_world, startLocation.x, startLocation.y, 100,
                             4, 1000, 1, false);
-
     tank->process_enemies(&enemy_tanks);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
-    player_tanks.push_back(tank);
   }
 }
 
@@ -155,14 +149,14 @@ void Game::update(const float deltaTime) {
   game_world.update(deltaTime);
 
   // Move
-  for (auto* const& enemy : enemy_tanks) {
+  for (auto& enemy : enemy_tanks) {
     // Update barriers
-    for (auto const& barrier : barriers) {
-      barrier->update(enemy->getBullets());
+    for (auto& barrier : barriers) {
+      barrier.update(enemy->getBullets());
     }
 
     // Update bullets
-    for (auto* const& player : player_tanks) {
+    for (auto& player : player_tanks) {
       player->checkCollision(enemy->getBullets(), deltaTime);
     }
 
@@ -176,14 +170,14 @@ void Game::update(const float deltaTime) {
     enemy->update(deltaTime);
   }
 
-  for (auto* const& player : player_tanks) {
+  for (auto& player : player_tanks) {
     // Update barriers
-    for (auto const& barrier : barriers) {
-      barrier->update(player->getBullets());
+    for (auto& barrier : barriers) {
+      barrier.update(player->getBullets());
     }
 
     // Update bullets
-    for (auto* const& enemy : enemy_tanks) {
+    for (auto& enemy : enemy_tanks) {
       enemy->checkCollision(player->getBullets(), deltaTime);
     }
 
@@ -198,9 +192,9 @@ void Game::update(const float deltaTime) {
   }
 
   // Remove broken barriers
-  for (auto const& barrier : barriers) {
-    if (barrier->getDead() && Random::random(0, 1) == 0) {
-      int randomType = Random::random(0, 3);
+  for (auto& barrier : barriers) {
+    if (barrier.getDead() && asw::random::between(0, 1) == 0) {
+      const int randomType = asw::random::between(0, 3);
       PowerUpType type;
 
       switch (randomType) {
@@ -218,21 +212,21 @@ void Game::update(const float deltaTime) {
           break;
       }
 
-      power_ups.emplace_back(new PowerUp(barrier->getPosition().x,
-                                         barrier->getPosition().y, type));
+      power_ups.emplace_back(barrier.getPosition().x, barrier.getPosition().y,
+                             type);
     }
   }
 
   // Cleanup barriers
   barriers.erase(
       std::remove_if(barriers.begin(), barriers.end(),
-                     [](auto const& barrier) { return barrier->getDead(); }),
+                     [](auto const& barrier) { return barrier.getDead(); }),
       barriers.end());
 
   // Cleanup power_ups
   power_ups.erase(
       std::remove_if(power_ups.begin(), power_ups.end(),
-                     [](auto const& power_up) { return power_up->getDead(); }),
+                     [](auto const& power_up) { return power_up.getDead(); }),
       power_ups.end());
 
   // Game over
@@ -257,32 +251,32 @@ void Game::update(const float deltaTime) {
 
 void Game::draw() {
   // Draw background
-  asw::draw::sprite(background, 0, 0);
+  asw::draw::sprite(background, asw::Vec2<float>(0, 0));
 
   // Draw decals
   asw::display::setRenderTarget(decal_buffer);
 
-  for (auto* const& enemy : enemy_tanks) {
+  for (auto* enemy : enemy_tanks) {
     enemy->putDecal();
   }
 
-  for (auto* const& player : player_tanks) {
+  for (auto* player : player_tanks) {
     player->putDecal();
   }
 
   // Blank map map_buffer
   asw::display::setRenderTarget(map_buffer);
-  asw::draw::clearColor(asw::util::makeColor(0, 88, 0, 0));
+  asw::draw::clearColor(asw::util::makeColor(0, 88, 0, 255));
 
   // Decal to buffer
-  asw::draw::sprite(decal_buffer, 0, 0);
+  asw::draw::sprite(decal_buffer, asw::Vec2<float>(0, 0));
 
   // Draw tanks
-  for (auto* const& enemy : enemy_tanks) {
+  for (auto* enemy : enemy_tanks) {
     enemy->draw();
   }
 
-  for (auto* const& player : player_tanks) {
+  for (auto* player : player_tanks) {
     player->draw();
   }
 
@@ -290,27 +284,31 @@ void Game::draw() {
   game_world.draw();
 
   // Draw barriers
-  for (auto const& barrier : barriers) {
-    barrier->draw();
+  for (const auto& barrier : barriers) {
+    barrier.draw();
   }
 
   // Draw power_ups
-  for (auto const& power_up : power_ups) {
-    power_up->draw();
+  for (const auto& power_up : power_ups) {
+    power_up.draw();
   }
 
   // Map to buffer
   asw::display::resetRenderTarget();
-  asw::draw::sprite(map_buffer, -map_x, -map_y);
+  asw::draw::sprite(map_buffer, asw::Vec2<float>(-map_x, -map_y));
 
   // Text
-  asw::draw::text(font, "Round: " + std::to_string(currentRound), 20, 20,
+  asw::draw::text(font, "Round: " + std::to_string(currentRound),
+                  asw::Vec2<float>(20, 20),
                   asw::util::makeColor(255, 255, 255));
-  asw::draw::text(font, "Team BLUE: " + std::to_string(player_tanks.size()), 20,
-                  35, asw::util::makeColor(255, 255, 255));
-  asw::draw::text(font, "Team RED: " + std::to_string(enemy_tanks.size()), 20,
-                  50, asw::util::makeColor(255, 255, 255));
+  asw::draw::text(font, "Team BLUE: " + std::to_string(player_tanks.size()),
+                  asw::Vec2<float>(20, 35),
+                  asw::util::makeColor(255, 255, 255));
+  asw::draw::text(font, "Team RED: " + std::to_string(enemy_tanks.size()),
+                  asw::Vec2<float>(20, 50),
+                  asw::util::makeColor(255, 255, 255));
 
   // Cursor
-  asw::draw::sprite(cursor, asw::input::mouse.x - 10, asw::input::mouse.y - 10);
+  asw::draw::sprite(cursor, asw::Vec2<float>(asw::input::mouse.x - 10,
+                                             asw::input::mouse.y - 10));
 }

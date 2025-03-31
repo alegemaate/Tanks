@@ -17,7 +17,6 @@
 #include "../game/PowerUp.hpp"
 #include "../game/Tank.hpp"
 #include "../game/World.hpp"
-#include "../util/Vec2.hpp"
 #include "../util/tools.h"
 
 #include "./State.hpp"
@@ -48,7 +47,6 @@ class Game : public State {
   // Images
   asw::Texture map_buffer;
   asw::Texture decal_buffer;
-  asw::Texture vision_buffer;
   asw::Texture background;
   asw::Texture cursor;
 
@@ -59,11 +57,11 @@ class Game : public State {
   World game_world;
 
   // Objects
-  std::vector<std::unique_ptr<Barrier>> barriers;
+  std::vector<Barrier> barriers;
   std::vector<Tank*> enemy_tanks;
   std::vector<Tank*> player_tanks;
-  std::vector<std::unique_ptr<PowerUp>> power_ups;
-  std::vector<Vec2<float>> startLocations;
+  std::vector<PowerUp> power_ups;
+  std::vector<asw::Vec2<float>> startLocations;
 
   float map_x = 0;
   float map_y = 0;

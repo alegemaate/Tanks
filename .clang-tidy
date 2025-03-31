@@ -13,5 +13,13 @@ Checks: |
   -modernize-use-nodiscard
   -cppcoreguidelines-init-variables
   -bugprone-easily-swappable-parameters
+  -cppcoreguidelines-avoid-non-const-global-variables
+  -modernize-use-trailing-return-type
+  -performance-enum-size
+  -cppcoreguidelines-pro-bounds-constant-array-index
+  -cppcoreguidelines-non-private-member-variables-in-classes
+  -cppcoreguidelines-avoid-const-or-ref-data-members
+  -misc-include-cleaner
+  -misc-non-private-member-variables-in-classes
 WarningsAsErrors: true
 HeaderFilterRegex: ".*"

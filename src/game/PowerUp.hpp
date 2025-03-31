@@ -10,10 +10,10 @@ class PowerUp {
  public:
   PowerUp(float x, float y, PowerUpType type);
 
-  float getX() const { return x; }
-  float getY() const { return y; }
-  static float getWidth() { return 40.0f; }
-  static float getHeight() { return 40.0f; }
+  float getX() const { return position.x; }
+  float getY() const { return position.y; }
+  static float getWidth() { return 40.0F; }
+  static float getHeight() { return 40.0F; }
   PowerUpType getType() const { return type; }
 
   bool getDead() const { return dead; }
@@ -23,8 +23,7 @@ class PowerUp {
   void draw() const;
 
  private:
-  float x;
-  float y;
+  asw::Vec2<float> position;
 
   PowerUpType type;
 

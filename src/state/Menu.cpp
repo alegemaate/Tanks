@@ -100,18 +100,24 @@ void Menu::draw() {
   start.draw();
 
   // Player nums
-  asw::draw::textCenter(font, std::to_string(Game::num_friends), 109, 315,
+  asw::draw::textCenter(font, std::to_string(Game::num_friends),
+                        asw::Vec2<float>(109, 315),
                         asw::util::makeColor(0, 0, 0));
-  asw::draw::textCenter(font, std::to_string(Game::num_enemies), 229, 315,
+  asw::draw::textCenter(font, std::to_string(Game::num_enemies),
+                        asw::Vec2<float>(229, 315),
                         asw::util::makeColor(0, 0, 0));
-  asw::draw::textCenter(font, std::to_string(Game::map_width), 349, 315,
+  asw::draw::textCenter(font, std::to_string(Game::map_width),
+                        asw::Vec2<float>(349, 315),
                         asw::util::makeColor(0, 0, 0));
-  asw::draw::textCenter(font, std::to_string(Game::map_height), 469, 315,
+  asw::draw::textCenter(font, std::to_string(Game::map_height),
+                        asw::Vec2<float>(469, 315),
                         asw::util::makeColor(0, 0, 0));
-  asw::draw::textCenter(font, std::to_string(Tank::num_bullet_bounces), 589,
-                        315, asw::util::makeColor(0, 0, 0));
+  asw::draw::textCenter(font, std::to_string(Tank::num_bullet_bounces),
+                        asw::Vec2<float>(589, 315),
+                        asw::util::makeColor(0, 0, 0));
 
   // Mouse
-  asw::draw::rectFill(asw::input::mouse.x, asw::input::mouse.y, 4, 4,
-                      asw::util::makeColor(255, 255, 255));
+  asw::draw::rectFill(
+      asw::Quad<float>(asw::input::mouse.x, asw::input::mouse.y, 4, 4),
+      asw::util::makeColor(255, 255, 255));
 }

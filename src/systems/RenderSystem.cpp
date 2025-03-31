@@ -13,6 +13,6 @@ void RenderSystem::render(entt::registry& registry) {
 
   view.each([&](const auto& spr, auto& pos) {
     auto bitmap = ImageRegistry::getImage(spr.key);
-    asw::draw::sprite(bitmap, pos.x, pos.y);
+    asw::draw::sprite(bitmap, asw::Vec2<float>(pos.x, pos.y));
   });
 }

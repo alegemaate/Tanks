@@ -51,7 +51,7 @@ void PlayerTank::update(const float deltaTime) {
   }
 
   if (isKeyDown(Key::SPACE) || isButtonDown(MouseButton::LEFT) ||
-      getControllerAxis(0, ControllerAxis::TRIGGER_RIGHT) != 0) {
+      getControllerAxis(0, ControllerAxis::RIGHT_TRIGGER) != 0) {
     shoot(rotation_turret, getCenterX() - 2, getCenterY() - 2);
   }
 

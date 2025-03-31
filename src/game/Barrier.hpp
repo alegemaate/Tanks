@@ -1,9 +1,9 @@
 #ifndef SRC_GAME_BARRIER_H_
 #define SRC_GAME_BARRIER_H_
 
+#include <asw/asw.h>
 #include <vector>
 
-#include "../util/Vec2.hpp"
 #include "./Bullet.hpp"
 
 enum class BarrierType {
@@ -14,10 +14,10 @@ enum class BarrierType {
 
 class Barrier {
  public:
-  Barrier(World* world, const Vec2<float>& position, BarrierType type);
+  Barrier(World* world, const asw::Vec2<float>& position, BarrierType type);
 
-  void update(const std::vector<Bullet*>* bullets);
-  void draw();
+  void update(std::vector<Bullet>& bullets);
+  void draw() const;
 
   float getWidth() const;
   float getHeight() const;
@@ -26,10 +26,10 @@ class Barrier {
 
   bool getDead() const;
 
-  Vec2<float> getPosition() const;
+  asw::Vec2<float> getPosition() const;
 
  private:
-  Vec2<float> position;
+  asw::Quad<float> transform;
 
   World* worldPointer;
 
@@ -38,12 +38,9 @@ class Barrier {
   bool indestructible = false;
   bool exploded = false;
 
-  float width;
-  float height;
-
   static asw::Sample sample_explode;
 
-   asw::Texture image;
+  asw::Texture image;
 
   void explode();
 };

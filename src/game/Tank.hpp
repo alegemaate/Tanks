@@ -23,33 +23,31 @@ class Tank {
 
   virtual ~Tank() = default;
 
-  virtual bool isDead();
+  virtual bool isDead() const;
 
-  virtual std::vector<Bullet*>* getBullets();
+  virtual std::vector<Bullet>& getBullets();
 
   virtual void update(const float deltaTime);
   virtual void draw();
   virtual void putDecal();
 
-  virtual float getX() { return x; }
-  virtual float getY() { return y; }
+  virtual float getX() const { return position.x; }
+  virtual float getY() const { return position.y; }
 
-  virtual float getCenterX() { return x + width / 2.0f; }
-  virtual float getCenterY() { return y + height / 2.0f; }
+  virtual float getCenterX() const { return position.x + width / 2.0F; }
+  virtual float getCenterY() const { return position.y + height / 2.0F; }
 
   virtual void set_map_dimensions(int mWidth, int mHeight) {
     map_width = mWidth;
     map_height = mHeight;
   }
 
-  virtual void checkCollision(std::vector<Bullet*>* enemyBullets,
+  virtual void checkCollision(std::vector<Bullet>& enemyBullets,
                               const float deltaTime);
-  virtual void checkCollision(
-      const std::vector<std::unique_ptr<Barrier>>& barriers,
-      const float deltaTime);
-  virtual void checkCollision(
-      const std::vector<std::unique_ptr<PowerUp>>& power_ups,
-      const float deltaTime);
+  virtual void checkCollision(const std::vector<Barrier>& barriers,
+                              const float deltaTime);
+  virtual void checkCollision(std::vector<PowerUp>& power_ups,
+                              const float deltaTime);
 
   virtual void process_enemies(std::vector<Tank*>* otherTanks);
 
@@ -58,8 +56,7 @@ class Tank {
   static unsigned char num_bullet_bounces;
 
  protected:
-  float x;
-  float y;
+  asw::Vec2<float> position;
 
   int health;
   int initialHealth;
@@ -100,7 +97,7 @@ class Tank {
   void accelerate(bool moving, const float deltaTime);
 
  private:
-  std::vector<Bullet*> bullets;
+  std::vector<Bullet> bullets;
 
   static asw::Sample sample_shot;
 

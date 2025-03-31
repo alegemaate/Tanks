@@ -11,11 +11,7 @@ A 2D, top down, tank fighting game built using SDL2
 
 ### Dependencies
 
-To pull the submodules, run the following command:
-
-```bash
-git submodule update --init --recursive
-```
+Dependencies are managed by CMake.
 
 ### Windows (MSYS2)
 

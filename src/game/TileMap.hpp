@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "../util/Vec2.hpp"
 #include "Barrier.hpp"
 
 struct TileMapNeighbours {
@@ -29,7 +28,7 @@ class TileMap {
   unsigned char height;
 
   std::vector<Barrier> barriers;
-  std::vector<Vec2<int>> start_locations;
+  std::vector<asw::Vec2<int>> start_locations;
 
   std::vector<std::vector<int>> tile_map;
 };

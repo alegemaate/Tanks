@@ -41,14 +41,17 @@ void Button::draw() const {
   // Backdrop
   const int c_element = hovering ? 220 : 200;
 
-  asw::draw::rectFill(x, y, width + padding_x * 2, height + padding_y * 2,
-                      asw::util::makeColor(c_element, c_element, c_element));
-  asw::draw::rect(x, y, width + padding_x * 2, height + padding_y * 2,
-                  asw::util::makeColor(0, 0, 0));
+  asw::draw::rectFill(
+      asw::Quad<float>(x, y, width + padding_x * 2, height + padding_y * 2),
+      asw::util::makeColor(c_element, c_element, c_element));
+  asw::draw::rect(
+      asw::Quad<float>(x, y, width + padding_x * 2, height + padding_y * 2),
+      asw::util::makeColor(0, 0, 0));
 
   // Text
   if (button_font != nullptr) {
-    asw::draw::text(button_font, text, x + padding_x, y + padding_y,
+    asw::draw::text(button_font, text,
+                    asw::Vec2<float>(x + padding_x, y + padding_y),
                     asw::util::makeColor(0, 0, 0));
   }
 }

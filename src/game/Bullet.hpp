@@ -37,8 +37,7 @@ class Bullet {
  private:
   World* worldPointer;
 
-  float x;
-  float y;
+  asw::Vec2<float> position;
   float vector_x;
   float vector_y;
 

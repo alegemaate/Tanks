@@ -1,7 +1,6 @@
 #include "AiTank.hpp"
 
 #include "../system/ImageRegistry.hpp"
-#include "../util/Random.hpp"
 
 // Init
 AiTank::AiTank(World* world,
@@ -52,14 +51,15 @@ void AiTank::find_enemy_target() {
   float closest_enemy_y = destination_y;
   bool found_enemy = false;
 
-  for (auto* const& tank : *otherTanks) {
+  for (const auto& tank : *otherTanks) {
     if (!tank->isDead()) {
       float enemy_x = tank->getX() + tank->getCenterX();
       float enemy_y = tank->getY() + tank->getCenterY();
       found_enemy = true;
 
-      if (find_distance(x, y, enemy_x, enemy_y) <
-          find_distance(x, y, closest_enemy_x, closest_enemy_y)) {
+      if (find_distance(position.x, position.y, enemy_x, enemy_y) <
+          find_distance(position.x, position.y, closest_enemy_x,
+                        closest_enemy_y)) {
         closest_enemy_x = enemy_x;
         closest_enemy_y = enemy_y;
       }
@@ -67,15 +67,15 @@ void AiTank::find_enemy_target() {
   }
 
   if (found_enemy) {
-    rotation_turret =
-        find_angle(x + 25, y + 25, closest_enemy_x, closest_enemy_y);
+    rotation_turret = find_angle(position.x + 25, position.y + 25,
+                                 closest_enemy_x, closest_enemy_y);
 
     // Shoot
     float distanceToEnemy =
-        find_distance(x, y, closest_enemy_x, closest_enemy_y);
+        find_distance(position.x, position.y, closest_enemy_x, closest_enemy_y);
 
-    if (Random::random(0, 10) == 0 && distanceToEnemy < 500) {
-      shoot(rotation_turret, x + 23, y + 23);
+    if (asw::random::between(0, 10) == 0 && distanceToEnemy < 500) {
+      shoot(rotation_turret, position.x + 23, position.y + 23);
     }
   } else {
     rotation_turret = rotation_body;
@@ -84,15 +84,15 @@ void AiTank::find_enemy_target() {
 
 // Ai point choosing
 void AiTank::update_target() {
-  float distanceToTarget =
+  const float distanceToTarget =
       find_distance(getCenterX(), getCenterY(), destination_x, destination_y);
 
-  bool cantMove = !canMoveX && !canMoveY;
-  float deltaDistance = std::abs(last_distance - distanceToTarget);
+  const bool cantMove = !canMoveX && !canMoveY;
+  const float deltaDistance = std::abs(last_distance - distanceToTarget);
 
   if (distanceToTarget < 10.0f || cantMove || deltaDistance < speed / 2.0f) {
-    destination_x = static_cast<float>(Random::random(0, map_width));
-    destination_y = static_cast<float>(Random::random(0, map_height));
+    destination_x = static_cast<float>(asw::random::between(0, map_width));
+    destination_y = static_cast<float>(asw::random::between(0, map_height));
     last_distance = 0.0f;
   } else {
     last_distance = distanceToTarget;
@@ -100,7 +100,8 @@ void AiTank::update_target() {
 }
 
 void AiTank::ai_drive(const float deltaTime) {
-  rotation_body = find_angle(x + 25, y + 25, destination_x, destination_y);
+  rotation_body = find_angle(position.x + 25, position.y + 25, destination_x,
+                             destination_y);
   accelerate(true, deltaTime);
   drive(rotation_body, deltaTime);
 }

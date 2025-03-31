@@ -38,18 +38,14 @@ class Particle {
  private:
   void drawRandom() const;
 
-  float x;
-  float y;
+  asw::Quad<float> transform;
+  asw::Vec2<float> velocity;
 
   asw::Color color;
 
-  int size;
   ParticleType type;
   int life;
   ParticleBehaviour behaviour;
-
-  float xVelocity;
-  float yVelocity;
 
   bool dead = false;
 };
