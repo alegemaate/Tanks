@@ -30,7 +30,7 @@ Particle::Particle(float x,
 }
 
 // Logic
-void Particle::update(const float deltaTime) {
+void Particle::update(float deltaTime) {
   auto deltaVelocity = velocity * (deltaTime / 8.0f);
 
   // Behaviour

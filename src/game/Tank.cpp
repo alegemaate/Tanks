@@ -54,7 +54,7 @@ void Tank::explode() {
   }
 }
 
-void Tank::accelerate(bool moving, const float deltaTime) {
+void Tank::accelerate(bool moving, float deltaTime) {
   if (moving) {
     if (speed < 0.1f) {
       speed = 0.2f;
@@ -78,8 +78,7 @@ std::vector<Bullet>& Tank::getBullets() {
 }
 
 // Check collision
-void Tank::checkCollision(std::vector<Bullet>& enemyBullets,
-                          const float deltaTime) {
+void Tank::checkCollision(std::vector<Bullet>& enemyBullets, float deltaTime) {
   for (auto& bullet : enemyBullets) {
     if (collisionAny(
             position.x, position.x + 50, bullet.getX(),
@@ -93,7 +92,7 @@ void Tank::checkCollision(std::vector<Bullet>& enemyBullets,
 }
 
 void Tank::checkCollision(const std::vector<Barrier>& barriers,
-                          const float deltaTime) {
+                          float deltaTime) {
   float delta_speed = speed * (deltaTime / 8.0f);
   float guess_vector_x = -delta_speed * cosf(rotation_body);
   float guess_vector_y = -delta_speed * sinf(rotation_body);
@@ -121,8 +120,7 @@ void Tank::checkCollision(const std::vector<Barrier>& barriers,
   }
 }
 
-void Tank::checkCollision(std::vector<PowerUp>& power_ups,
-                          const float deltaTime) {
+void Tank::checkCollision(std::vector<PowerUp>& power_ups, float deltaTime) {
   for (auto& power_up : power_ups) {
     if (collisionAny(position.x, position.x + 50, power_up.getX(),
                      power_up.getX() + power_up.getWidth(), position.y,
@@ -135,7 +133,7 @@ void Tank::checkCollision(std::vector<PowerUp>& power_ups,
 }
 
 // Move around
-void Tank::drive(float rotation, const float deltaTime) {
+void Tank::drive(float rotation, float deltaTime) {
   float deltaSpeed = speed * (deltaTime / 8.0f);
 
   if (canMoveX) {
@@ -147,7 +145,7 @@ void Tank::drive(float rotation, const float deltaTime) {
 }
 
 // Update bullets
-void Tank::update_bullets(const float deltaTime) {
+void Tank::update_bullets(float deltaTime) {
   // Update bullets
   for (auto& bullet : bullets) {
     bullet.update(deltaTime);
@@ -173,7 +171,7 @@ void Tank::shoot(float rotation, float targetX, float targetY) {
 }
 
 // Update
-void Tank::update(const float deltaTime) {
+void Tank::update(float deltaTime) {
   // Just died
   if (!dead && (health < 1)) {
     explode();

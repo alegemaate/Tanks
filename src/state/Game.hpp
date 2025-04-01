@@ -3,8 +3,7 @@
  * Allan Legemaate
  * 20/08/2017
  **/
-#ifndef SRC_STATE_GAME_H_
-#define SRC_STATE_GAME_H_
+#pragma once
 
 #include <asw/asw.h>
 #include <array>
@@ -21,20 +20,15 @@
 
 #include "./State.hpp"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327
-#endif
-
-class Game : public State {
+class Game : public asw::scene::Scene<States> {
  public:
-  explicit Game(StateEngine& engine) : State(engine) {}
+  using asw::scene::Scene<States>::Scene;
 
   void init() override;
-  void update(const float deltaTime) override;
+
+  void update(float deltaTime) override;
+
   void draw() override;
-  void cleanup() override {
-    // No cleanup
-  }
 
   // Map stuff
   static unsigned char map_width;
@@ -58,15 +52,12 @@ class Game : public State {
 
   // Objects
   std::vector<Barrier> barriers;
-  std::vector<Tank*> enemy_tanks;
-  std::vector<Tank*> player_tanks;
+  std::vector<std::shared_ptr<Tank>> enemy_tanks;
+  std::vector<std::shared_ptr<Tank>> player_tanks;
   std::vector<PowerUp> power_ups;
-  std::vector<asw::Vec2<float>> startLocations;
 
   float map_x = 0;
   float map_y = 0;
 
   int currentRound = 0;
 };
-
-#endif  // SRC_STATE_GAME_H_

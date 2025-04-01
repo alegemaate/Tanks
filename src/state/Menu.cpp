@@ -29,7 +29,7 @@ void Menu::init() {
 }
 
 // Update routine
-void Menu::update(const float deltaTime) {
+void Menu::update(float deltaTime) {
   // Update buttons
   enemies_up.update();
   enemies_down.update();
@@ -77,7 +77,7 @@ void Menu::update(const float deltaTime) {
 
   // Start game
   if (start.clicked()) {
-    this->setNextState(ProgramState::Game);
+    sceneManager.setNextScene(States::Game);
   }
 }
 

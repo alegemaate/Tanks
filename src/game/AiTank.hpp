@@ -14,7 +14,7 @@ class AiTank : public Tank {
          float speed,
          bool enemy);
 
-  void update(const float deltaTime) override;
+  void update(float deltaTime) override;
 
  private:
   float destination_x{0.0f};
@@ -23,7 +23,7 @@ class AiTank : public Tank {
 
   void update_target();
   void find_enemy_target();
-  void ai_drive(const float deltaTime);
+  void ai_drive(float deltaTime);
 };
 
 #endif  // SRC_GAME_AI_TANK_H_

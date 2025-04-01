@@ -29,7 +29,7 @@ class Particle {
            int life,
            ParticleBehaviour behavior);
 
-  void update(const float deltaTime);
+  void update(float deltaTime);
 
   void draw() const;
 

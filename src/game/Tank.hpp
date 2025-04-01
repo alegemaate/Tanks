@@ -27,7 +27,7 @@ class Tank {
 
   virtual std::vector<Bullet>& getBullets();
 
-  virtual void update(const float deltaTime);
+  virtual void update(float deltaTime);
   virtual void draw();
   virtual void putDecal();
 
@@ -43,13 +43,12 @@ class Tank {
   }
 
   virtual void checkCollision(std::vector<Bullet>& enemyBullets,
-                              const float deltaTime);
+                              float deltaTime);
   virtual void checkCollision(const std::vector<Barrier>& barriers,
-                              const float deltaTime);
-  virtual void checkCollision(std::vector<PowerUp>& power_ups,
-                              const float deltaTime);
+                              float deltaTime);
+  virtual void checkCollision(std::vector<PowerUp>& power_ups, float deltaTime);
 
-  virtual void process_enemies(std::vector<Tank*>* otherTanks);
+  virtual void process_enemies(std::vector<std::shared_ptr<Tank>>* otherTanks);
 
   virtual void pickupPowerUp(PowerUpType type);
 
@@ -89,12 +88,12 @@ class Tank {
   bool canMoveX = true;
   bool canMoveY = true;
 
-  std::vector<Tank*>* otherTanks;
+  std::vector<std::shared_ptr<Tank>>* otherTanks;
 
   // Update
-  void drive(float rotation, const float deltaTime);
+  void drive(float rotation, float deltaTime);
   void shoot(float rotation, float targetX, float targetY);
-  void accelerate(bool moving, const float deltaTime);
+  void accelerate(bool moving, float deltaTime);
 
  private:
   std::vector<Bullet> bullets;
@@ -102,7 +101,7 @@ class Tank {
   static asw::Sample sample_shot;
 
   // Update
-  void update_bullets(const float deltaTime);
+  void update_bullets(float deltaTime);
   void explode();
 
   // Draw

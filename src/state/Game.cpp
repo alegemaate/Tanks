@@ -15,15 +15,24 @@ const unsigned char max_map_height = 255;
 
 // Init state (and Game)
 void Game::init() {
+  // Reset vars
+  barriers.clear();
+  enemy_tanks.clear();
+  player_tanks.clear();
+  power_ups.clear();
+  map_x = 0;
+  map_y = 0;
+  currentRound = 0;
+
   // Create buffers
   decal_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
+  map_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
 
+  // Setup decal buffer
   asw::display::setRenderTarget(decal_buffer);
   asw::draw::clearColor(asw::util::makeColor(0, 0, 0, 255));
   asw::display::resetRenderTarget();
   asw::draw::setBlendMode(decal_buffer, asw::BlendMode::ADD);
-
-  map_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
 
   // Load images
   background = ImageRegistry::getImage("game-background");
@@ -34,11 +43,12 @@ void Game::init() {
 
   // Make a map
   std::array<std::array<BarrierType, max_map_height>, max_map_width> map_temp{};
+  std::vector<asw::Vec2<float>> startLocations{};
 
   for (unsigned char pass = 0; pass < 8; pass++) {
     for (unsigned char i = 0; i < map_width; i++) {
       for (unsigned char t = 0; t < map_height; t++) {
-        // Pass 0 (Erase)
+        // Pass 0 (Initial)
         if (pass == 0) {
           map_temp[i][t] = BarrierType::NONE;
         }
@@ -111,40 +121,38 @@ void Game::init() {
   {
     const asw::Vec2<float> startLocation = startLocations.at(
         asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
-    auto* tank = new PlayerTank(&game_world, startLocation.x, startLocation.y,
-                                100, 4, 700, 1);
+    auto tank = player_tanks.emplace_back(new PlayerTank(
+        &game_world, startLocation.x, startLocation.y, 100, 4, 700, 1));
 
     tank->process_enemies(&enemy_tanks);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
-    player_tanks.push_back(tank);
   }
 
   // Enemies
   for (unsigned char i = 0; i < num_enemies; i++) {
     const asw::Vec2<float> startLocation = startLocations.at(
         asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
-    auto* tank =
+    auto tank = enemy_tanks.emplace_back(
         new AiTank(&game_world, startLocation.x, startLocation.y,
                    asw::random::between(50, 150), asw::random::between(1, 8),
-                   asw::random::between(500.0F, 1500.0F), 1, true);
+                   asw::random::between(500.0F, 1500.0F), 1, true));
 
     tank->process_enemies(&player_tanks);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
-    enemy_tanks.push_back(tank);
   }
 
   // Friends
   for (unsigned char i = 0; i < num_friends; i++) {
     const asw::Vec2<float> startLocation = startLocations.at(
         asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
-    auto* tank = new AiTank(&game_world, startLocation.x, startLocation.y, 100,
-                            4, 1000, 1, false);
+    auto tank = enemy_tanks.emplace_back(new AiTank(
+        &game_world, startLocation.x, startLocation.y, 100, 4, 1000, 1, false));
     tank->process_enemies(&enemy_tanks);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
   }
 }
 
-void Game::update(const float deltaTime) {
+void Game::update(float deltaTime) {
   // Update world
   game_world.update(deltaTime);
 
@@ -232,11 +240,11 @@ void Game::update(const float deltaTime) {
   // Game over
   if (asw::input::wasKeyPressed(asw::input::Key::SPACE) &&
       (player_tanks.empty() || enemy_tanks.empty())) {
-    this->setNextState(ProgramState::Menu);
+    sceneManager.setNextScene(States::Menu);
   }
 
   if (asw::input::keyboard.pressed[SDL_SCANCODE_M]) {
-    this->setNextState(ProgramState::Menu);
+    sceneManager.setNextScene(States::Menu);
   }
 
   // Scroll map
@@ -256,11 +264,11 @@ void Game::draw() {
   // Draw decals
   asw::display::setRenderTarget(decal_buffer);
 
-  for (auto* enemy : enemy_tanks) {
+  for (auto enemy : enemy_tanks) {
     enemy->putDecal();
   }
 
-  for (auto* player : player_tanks) {
+  for (auto player : player_tanks) {
     player->putDecal();
   }
 
@@ -272,11 +280,11 @@ void Game::draw() {
   asw::draw::sprite(decal_buffer, asw::Vec2<float>(0, 0));
 
   // Draw tanks
-  for (auto* enemy : enemy_tanks) {
+  for (auto enemy : enemy_tanks) {
     enemy->draw();
   }
 
-  for (auto* player : player_tanks) {
+  for (auto player : player_tanks) {
     player->draw();
   }
 

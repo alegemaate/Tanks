@@ -108,7 +108,7 @@ float Bullet::getYVelocity() const {
 }
 
 // Update bullets
-void Bullet::update(const float deltaTime) {
+void Bullet::update(float deltaTime) {
   if (health > 0) {
     // Move
     position += asw::Vec2<float>(vector_x, vector_y) * (deltaTime / 8.0f);

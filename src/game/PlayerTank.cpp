@@ -24,7 +24,7 @@ PlayerTank::PlayerTank(World* world,
 }
 
 // Update
-void PlayerTank::update(const float deltaTime) {
+void PlayerTank::update(float deltaTime) {
   using namespace asw::input;
 
   Tank::update(deltaTime);
@@ -88,6 +88,6 @@ void PlayerTank::update(const float deltaTime) {
 }
 
 // Feed AI player positions
-void Tank::process_enemies(std::vector<Tank*>* tempOtherTanks) {
+void Tank::process_enemies(std::vector<std::shared_ptr<Tank>>* tempOtherTanks) {
   otherTanks = tempOtherTanks;
 }

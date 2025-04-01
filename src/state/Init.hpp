@@ -3,28 +3,25 @@
  * Allan Legemaate
  * 09/05/2017
  **/
-#ifndef TANKS_INIT_HPP
-#define TANKS_INIT_HPP
+#pragma once
 
 #include <asw/asw.h>
 
+#include "./Game.hpp"
+#include "./Menu.hpp"
 #include "./State.hpp"
 
-class Init : public State {
+class Init : public asw::scene::Scene<States> {
  public:
-  explicit Init(StateEngine& engine) : State(engine) {}
+  using asw::scene::Scene<States>::Scene;
 
   void init() override;
-  void update(const float deltaTime) override {
+
+  void update(float _deltaTime) override {
+    sceneManager.registerScene<Menu>(States::Menu, sceneManager);
+    sceneManager.registerScene<Game>(States::Game, sceneManager);
+
     // Goto menu
-    this->setNextState(ProgramState::Menu);
-  }
-  void draw() override {
-    // No draw method
-  }
-  void cleanup() override {
-    // No cleanup
+    sceneManager.setNextScene(States::Menu);
   }
 };
-
-#endif  // TANKS_INIT_HPP

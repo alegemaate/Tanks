@@ -3,8 +3,7 @@
  * Allan Legemaate
  * 20/08/2017
  **/
-#ifndef SRC_STATE_MENU_HPP_
-#define SRC_STATE_MENU_HPP_
+#pragma once
 
 #include <asw/asw.h>
 #include <entt/entt.hpp>
@@ -14,16 +13,13 @@
 #include "Game.hpp"
 #include "State.hpp"
 
-class Menu : public State {
+class Menu : public asw::scene::Scene<States> {
  public:
-  explicit Menu(StateEngine& engine) : State(engine) {}
+  using asw::scene::Scene<States>::Scene;
 
   void init() override;
-  void update(const float deltaTime) override;
+  void update(float deltaTime) override;
   void draw() override;
-  void cleanup() override {
-    // No cleanup
-  }
 
  private:
   Button enemies_up;
@@ -46,5 +42,3 @@ class Menu : public State {
 
   RenderSystem m_render_system;
 };
-
-#endif  // SRC_STATE_MENU_HPP_
