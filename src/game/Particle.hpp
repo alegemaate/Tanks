@@ -15,10 +15,9 @@ enum class ParticleBehaviour {
   EXPLODE,
 };
 
-class Particle {
+class Particle : public asw::game::GameObject {
  public:
-  Particle(float x,
-           float y,
+  Particle(const asw::Vec2<float>& position,
            asw::Color color,
            float xVelocityMin,
            float xMax,
@@ -29,25 +28,20 @@ class Particle {
            int life,
            ParticleBehaviour behavior);
 
-  void update(float deltaTime);
+  void update(float deltaTime) override;
 
-  void draw() const;
-
-  bool getDead() const;
+  void draw() override;
 
  private:
   void drawRandom() const;
 
-  asw::Quad<float> transform;
-  asw::Vec2<float> velocity;
-
   asw::Color color;
+
+  asw::Vec2<float> velocity;
 
   ParticleType type;
   int life;
   ParticleBehaviour behaviour;
-
-  bool dead = false;
 };
 
 #endif  // SRC_GAME_PARTICLE_H_

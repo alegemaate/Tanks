@@ -15,7 +15,6 @@
 #include "../game/PlayerTank.hpp"
 #include "../game/PowerUp.hpp"
 #include "../game/Tank.hpp"
-#include "../game/World.hpp"
 #include "../util/tools.h"
 
 #include "./State.hpp"
@@ -47,17 +46,7 @@ class Game : public asw::scene::Scene<States> {
   // Fonts
   asw::Font font;
 
-  // World
-  World game_world;
-
-  // Objects
-  std::vector<Barrier> barriers;
-  std::vector<std::shared_ptr<Tank>> enemy_tanks;
-  std::vector<std::shared_ptr<Tank>> player_tanks;
-  std::vector<PowerUp> power_ups;
-
-  float map_x = 0;
-  float map_y = 0;
+  asw::Vec2<float> map_position;
 
   int currentRound = 0;
 };

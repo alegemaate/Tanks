@@ -95,7 +95,9 @@
     "ios": "cpp",
     "locale": "cpp",
     "regex": "cpp",
-    "text_encoding": "cpp"
+    "text_encoding": "cpp",
+    "queue": "cpp",
+    "stack": "cpp"
   },
   "sonarlint.pathToCompileCommands": "${workspaceFolder}/compile_commands.json"
 }

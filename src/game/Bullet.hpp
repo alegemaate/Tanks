@@ -1,11 +1,10 @@
-#ifndef SRC_GAME_BULLET_H_
-#define SRC_GAME_BULLET_H_
+#pragma once
 
 #include <vector>
 
+#include "../state/State.hpp"
 #include "../util/tools.h"
 #include "./Particle.hpp"
-#include "./World.hpp"
 
 enum class BounceDirection {
   NONE,
@@ -15,36 +14,34 @@ enum class BounceDirection {
   RIGHT,
 };
 
-class Bullet {
+class Bullet : public asw::game::GameObject {
  public:
-  Bullet(World* world, float x, float y, float angle, float speed, int health);
+  Bullet(asw::scene::Scene<States>* scene,
+         float x,
+         float y,
+         float angle,
+         float speed,
+         int health,
+         int team);
 
-  bool getErase() const;
-  void update(float deltaTime);
-  void draw() const;
-
-  float getX() const;
-  float getY() const;
-
-  float getYVelocity() const;
-  float getXVelocity() const;
-
-  void bounce(BounceDirection direction);
+  void update(float deltaTime) override;
+  void draw() override;
   void destroy();
 
-  void reverseDirection(const std::string& direction);
+  float getXVelocity() const { return velocity.x; }
+
+  float getYVelocity() const { return velocity.y; }
+
+  int getTeam() const { return team; }
 
  private:
-  World* worldPointer;
+  void bounce(BounceDirection direction);
+  void reverseDirection(const std::string& direction);
 
-  asw::Vec2<float> position;
-  float vector_x;
-  float vector_y;
+  asw::scene::Scene<States>* scene;
+  asw::Vec2<float> velocity;
 
+  int team;
   int health;
-  BounceDirection incidenceDirection = BounceDirection::NONE;
-
-  bool pendingErase = false;
+  BounceDirection incidenceDirection{BounceDirection::NONE};
 };
-
-#endif  // SRC_GAME_BULLET_H_

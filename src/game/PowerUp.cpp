@@ -2,8 +2,9 @@
 
 #include "../system/ImageRegistry.hpp"
 
-PowerUp::PowerUp(float x, float y, PowerUpType type)
-    : position(x, y), type(type) {
+PowerUp::PowerUp(float x, float y, PowerUpType type) : type(type) {
+  transform = asw::Quad<float>(x, y, 40.0F, 40.0F);
+
   switch (type) {
     case PowerUpType::HEALTH:
       imageKey = "power-up-health";
@@ -22,7 +23,7 @@ PowerUp::PowerUp(float x, float y, PowerUpType type)
   }
 }
 
-void PowerUp::draw() const {
+void PowerUp::draw() {
   asw::Texture image = ImageRegistry::getImage(imageKey);
-  asw::draw::sprite(image, position);
+  asw::draw::sprite(image, transform.position);
 }

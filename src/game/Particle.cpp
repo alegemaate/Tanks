@@ -1,8 +1,7 @@
 #include "Particle.hpp"
 
 // Constructor
-Particle::Particle(float x,
-                   float y,
+Particle::Particle(const asw::Vec2<float>& position,
                    asw::Color color,
                    float xVelocityMin,
                    float xVelocityMax,
@@ -12,49 +11,42 @@ Particle::Particle(float x,
                    ParticleType type,
                    int life,
                    ParticleBehaviour behaviour)
-    : transform(x, y, size, size),
-      color(color),
-      type(type),
-      life(life),
-      behaviour(behaviour) {
-  this->velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
-  this->velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
+    : color(color), type(type), life(life), behaviour(behaviour) {
+  transform = asw::Quad<float>(position.x, position.y, size, size);
+  velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
+  velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
 
   // No unmoving
-  if (velocity.x < 0.1f && velocity.x > -0.1f) {
-    this->velocity.x = 0.1f;
+  if (velocity.x < 0.1F && velocity.x > -0.1F) {
+    velocity.x = 0.1F;
   }
-  if (velocity.y < 0.1f && velocity.y > -0.1f) {
-    this->velocity.y = 0.1f;
+
+  if (velocity.y < 0.1F && velocity.y > -0.1F) {
+    velocity.y = 0.1F;
   }
 }
 
 // Logic
 void Particle::update(float deltaTime) {
-  auto deltaVelocity = velocity * (deltaTime / 8.0f);
+  auto deltaVelocity = velocity * (deltaTime / 8.0F);
 
   // Behaviour
   if (behaviour == ParticleBehaviour::EXPLODE) {
     transform.position += deltaVelocity;
-    velocity -= deltaVelocity / 10.0f;
+    velocity -= deltaVelocity / 10.0F;
   } else {
     transform.position.x += asw::random::between(-velocity.x, velocity.x);
     transform.position.y += asw::random::between(-velocity.y, velocity.y);
   }
 
   // Die
-  if (asw::random::between(0, life) < (deltaTime / 8.0f)) {
-    dead = true;
+  if (asw::random::between(0, life) < (deltaTime / 8.0F)) {
+    alive = false;
   }
 }
 
-// Check death
-bool Particle::getDead() const {
-  return dead;
-}
-
 // Draw
-void Particle::draw() const {
+void Particle::draw() {
   switch (type) {
     case ParticleType::PIXEL:
       asw::draw::point(transform.position, color);

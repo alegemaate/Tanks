@@ -3,13 +3,17 @@
 #include <memory>
 
 #include "../system/ImageRegistry.hpp"
+#include "./Particle.hpp"
+#include "./PowerUp.hpp"
 
 asw::Sample Barrier::sample_explode;
 
-Barrier::Barrier(World* world,
+Barrier::Barrier(asw::scene::Scene<States>* scene,
                  const asw::Vec2<float>& position,
                  BarrierType type)
-    : transform(position.x, position.y, 0, 0), worldPointer(world) {
+    : scene(scene) {
+  transform = asw::Quad<float>(position.x, position.y, 0, 0);
+
   switch (type) {
     case BarrierType::BOX:
       this->image = ImageRegistry::getImage("block-box");
@@ -29,58 +33,14 @@ Barrier::Barrier(World* world,
 }
 
 // Update
-void Barrier::update(std::vector<Bullet>& bullets) {
-  if (health <= 0 && !exploded) {
-    explode();
-    exploded = true;
-  }
-
+void Barrier::update(float deltaTime) {
   if (health <= 0) {
-    return;
-  }
-
-  for (auto& bullet : bullets) {
-    if (collisionAny(transform.position.x,
-                     transform.position.x + transform.size.x, bullet.getX(),
-                     bullet.getX() + 5, transform.position.y,
-                     transform.position.y + transform.size.y, bullet.getY(),
-                     bullet.getY() + 5)) {
-      if (collisionBottom(bullet.getY() + bullet.getYVelocity(),
-                          bullet.getY() + 5,
-                          transform.position.y + transform.size.y)) {
-        bullet.reverseDirection("y");
-        bullet.bounce(BounceDirection::BOTTOM);
-      }
-
-      if (collisionTop(bullet.getY(), bullet.getY() + 5 + bullet.getYVelocity(),
-                       transform.position.y)) {
-        bullet.reverseDirection("y");
-        bullet.bounce(BounceDirection::TOP);
-      }
-
-      if (collisionLeft(bullet.getX(),
-                        bullet.getX() + 5 + bullet.getXVelocity(),
-                        transform.position.x)) {
-        bullet.reverseDirection("x");
-        bullet.bounce(BounceDirection::LEFT);
-      }
-
-      if (collisionRight(bullet.getX() + bullet.getXVelocity(),
-                         bullet.getX() + 5,
-                         transform.position.x + transform.size.x)) {
-        bullet.reverseDirection("x");
-        bullet.bounce(BounceDirection::RIGHT);
-      }
-
-      if (!indestructible) {
-        health -= 1;
-      }
-    }
+    explode();
   }
 }
 
 // Draw image
-void Barrier::draw() const {
+void Barrier::draw() {
   if (health > 0) {
     asw::draw::sprite(image, transform.position);
   }
@@ -96,40 +56,48 @@ float Barrier::getHeight() const {
   return transform.size.y;
 }
 
-// Check if it needs cleanup
-bool Barrier::getDead() const {
-  return !indestructible && health <= 0;
-}
-
 asw::Vec2<float> Barrier::getPosition() const {
   return this->transform.position;
 }
 
 // Explode
 void Barrier::explode() {
+  alive = false;
+
   // Explode
   asw::sound::play(sample_explode, 255, 127, 0);
 
   for (int i = 0; i < 100; i++) {
-    asw::Color color =
+    const asw::Color color =
         asw::util::makeColor(255, asw::random::between(0, 255), 0);
 
-    // Make sure not transparent (they show as white)
-    // do { TODO
-    //   // position of colour
-    //   int randomY = asw::random::between(0, static_cast<int>(height));
-    //   int randomX = asw::random::between(0, static_cast<int>(width));
-
-    //   // New colour
-    //   color = getpixel(image, randomY, randomX);
-    // } while (getr(color) == 255 && getg(color) == 255 && getb(color) == 255);
-
     // Make particle
-    auto particle = std::make_shared<Particle>(
-        transform.position.x + transform.size.x / 2.0f,
-        transform.position.y + transform.size.y / 2.0f, color, -6.0, 6.0, -6.0,
-        6.0, 2, ParticleType::SQUARE, 30, ParticleBehaviour::EXPLODE);
+    scene->createObject<Particle>(transform.getCenter(), color, -6.0, 6.0, -6.0,
+                                  6.0, 2, ParticleType::SQUARE, 30,
+                                  ParticleBehaviour::EXPLODE);
+  }
 
-    worldPointer->addParticle(particle);
+  // Remove broken barriers
+  if (asw::random::between(0, 1) == 0) {
+    const int randomType = asw::random::between(0, 3);
+    PowerUpType type;
+
+    switch (randomType) {
+      case 1:
+        type = PowerUpType::SPEED;
+        break;
+      case 2:
+        type = PowerUpType::FIRE_SPEED;
+        break;
+      case 3:
+        type = PowerUpType::FIRE_DELAY;
+        break;
+      default:
+        type = PowerUpType::HEALTH;
+        break;
+    }
+
+    scene->createObject<PowerUp>(transform.position.x, transform.position.y,
+                                 type);
   }
 }

@@ -2,63 +2,54 @@
 
 #include <cmath>
 
+#include "./Barrier.hpp"
+
 // Init
-Bullet::Bullet(World* world,
+Bullet::Bullet(asw::scene::Scene<States>* scene,
                float x,
                float y,
                float angle,
                float speed,
-               int health)
-    : worldPointer(world), position(x, y), health(health) {
-  this->vector_x = -speed * cosf(angle);
-  this->vector_y = -speed * sinf(angle);
-}
-
-bool Bullet::getErase() const {
-  return pendingErase;
+               int health,
+               int team)
+    : scene(scene),
+      velocity(-speed * cosf(angle), -speed * sinf(angle)),
+      team(team),
+      health(health) {
+  transform.position.x = x;
+  transform.position.y = y;
+  transform.size.x = 5;
+  transform.size.y = 5;
 }
 
 // Reverse specified vector
 void Bullet::reverseDirection(const std::string& direction) {
   if (direction == "x") {
-    vector_x = -vector_x;
+    velocity.x = -velocity.x;
   } else if (direction == "y") {
-    vector_y = -vector_y;
+    velocity.y = -velocity.y;
   } else {
-    vector_y = -vector_y;
-    vector_x = -vector_x;
+    velocity.y = -velocity.y;
+    velocity.x = -velocity.x;
   }
-}
-
-// Get coordinates
-float Bullet::getX() const {
-  return position.x;
-}
-
-float Bullet::getY() const {
-  return position.y;
 }
 
 // Bounce off wall
 void Bullet::bounce(BounceDirection direction) {
   health--;
   incidenceDirection = direction;
-
-  if (health <= 0) {
-    destroy();
-  }
 }
 
 // Destroy
 void Bullet::destroy() {
   // Has it already died?
-  if (pendingErase) {
+  if (!alive) {
     return;
   }
 
   // Make sure health is 0
   health = 0;
-  pendingErase = true;
+  alive = false;
 
   // Make explosion
   for (int i = 0; i < 100; i++) {
@@ -66,72 +57,84 @@ void Bullet::destroy() {
 
     switch (incidenceDirection) {
       case BounceDirection::BOTTOM: {
-        auto particle = std::make_shared<Particle>(
-            position.x, position.y, color, -5, 5, 0, 3, 2, ParticleType::SQUARE,
-            10, ParticleBehaviour::EXPLODE);
-
-        worldPointer->addParticle(particle);
+        scene->createObject<Particle>(transform.getCenter(), color, -5, 5, 0, 3,
+                                      2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
       }
       case BounceDirection::TOP: {
-        auto particle = std::make_shared<Particle>(
-            position.x, position.y, color, -5, 5, -3, 0, 2,
-            ParticleType::SQUARE, 10, ParticleBehaviour::EXPLODE);
-        worldPointer->addParticle(particle);
+        scene->createObject<Particle>(transform.getCenter(), color, -5, 5, -3,
+                                      0, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
       }
       case BounceDirection::LEFT: {
-        auto particle = std::make_shared<Particle>(
-            position.x, position.y, color, -3, 0, -5, 5, 2,
-            ParticleType::SQUARE, 10, ParticleBehaviour::EXPLODE);
-        worldPointer->addParticle(particle);
+        scene->createObject<Particle>(transform.getCenter(), color, -3, 0, -5,
+                                      5, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
       }
       default: {
-        auto particle = std::make_shared<Particle>(
-            position.x, position.y, color, 0, 3, -5, 5, 2, ParticleType::SQUARE,
-            10, ParticleBehaviour::EXPLODE);
-        worldPointer->addParticle(particle);
+        scene->createObject<Particle>(transform.getCenter(), color, 0, 3, -5, 5,
+                                      2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
       }
     }
   }
 }
 
-// Return velocities
-float Bullet::getXVelocity() const {
-  return vector_x;
-}
-
-float Bullet::getYVelocity() const {
-  return vector_y;
-}
-
 // Update bullets
 void Bullet::update(float deltaTime) {
-  if (health > 0) {
-    // Move
-    position += asw::Vec2<float>(vector_x, vector_y) * (deltaTime / 8.0f);
+  // Destroy if out of bounds or health is 0
+  if (health <= 0 || transform.position.x < 0 || transform.position.x > 10000 ||
+      transform.position.y < 0 || transform.position.y > 10000) {
+    destroy();
+  }
 
-    // Off screen
-    if (position.x < 0 || position.x > 10000 || position.y < 0 ||
-        position.y > 10000) {
-      destroy();
+  // Move
+  transform.position +=
+      asw::Vec2<float>(velocity.x, velocity.y) * (deltaTime / 8.0F);
+
+  // Bounce
+  for (auto& obj : scene->getObjectView<Barrier>()) {
+    if (transform.contains(obj->transform)) {
+      if (collisionBottom(transform.position.y + velocity.y,
+                          transform.position.y + 5,
+                          obj->transform.position.y + obj->transform.size.y)) {
+        reverseDirection("y");
+        bounce(BounceDirection::BOTTOM);
+      }
+
+      if (collisionTop(transform.position.y,
+                       transform.position.y + 5 + velocity.y,
+                       obj->transform.position.y)) {
+        reverseDirection("y");
+        bounce(BounceDirection::TOP);
+      }
+
+      if (collisionLeft(transform.position.x,
+                        transform.position.x + 5 + velocity.x,
+                        obj->transform.position.x)) {
+        reverseDirection("x");
+        bounce(BounceDirection::LEFT);
+      }
+
+      if (collisionRight(transform.position.x + velocity.x,
+                         transform.position.x + 5,
+                         obj->transform.position.x + obj->transform.size.x)) {
+        reverseDirection("x");
+        bounce(BounceDirection::RIGHT);
+      }
+
+      obj->hit();
     }
   }
 }
 
 // Draw image
-void Bullet::draw() const {
-  auto x_int = static_cast<int>(position.x);
-  auto y_int = static_cast<int>(position.y);
-
-  if (health > 0) {
-    asw::draw::rectFill(asw::Quad<float>(x_int, y_int, 5, 5),
-                        asw::util::makeColor(0, 0, 0));
-    asw::draw::rectFill(asw::Quad<float>(x_int + 1, y_int + 1, 3, 3),
-                        asw::util::makeColor(255, 0, 0));
-    asw::draw::rectFill(asw::Quad<float>(x_int + 2, y_int + 2, 1, 1),
-                        asw::util::makeColor(0, 255, 0));
-  }
+void Bullet::draw() {
+  asw::draw::rectFill(transform, asw::util::makeColor(0, 0, 0));
+  const auto inner = transform + asw::Quad<float>(1, 1, -1, -1);
+  asw::draw::rectFill(inner, asw::util::makeColor(255, 0, 0));
 }

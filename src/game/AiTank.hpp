@@ -1,25 +1,24 @@
 #ifndef SRC_GAME_AI_TANK_H_
 #define SRC_GAME_AI_TANK_H_
 
+#include "../state/State.hpp"
 #include "Tank.hpp"
 
 class AiTank : public Tank {
  public:
-  AiTank(World* world,
-         float x,
-         float y,
+  AiTank(asw::scene::Scene<States>* scene,
+         const asw::Vec2<float>& position,
          int health,
          int fireSpeed,
          int fireDelay,
          float speed,
-         bool enemy);
+         int team);
 
   void update(float deltaTime) override;
 
  private:
-  float destination_x{0.0f};
-  float destination_y{0.0f};
-  float last_distance{0.0f};
+  asw::Vec2<float> destination;
+  float last_distance{0.0F};
 
   void update_target();
   void find_enemy_target();

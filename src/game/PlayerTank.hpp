@@ -5,9 +5,8 @@
 
 class PlayerTank : public Tank {
  public:
-  PlayerTank(World* world,
-             float x,
-             float y,
+  PlayerTank(asw::scene::Scene<States>* scene,
+             const asw::Vec2<float>& position,
              int health,
              int fireSpeed,
              int fireDelay,

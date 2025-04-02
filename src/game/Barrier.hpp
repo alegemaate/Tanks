@@ -4,7 +4,7 @@
 #include <asw/asw.h>
 #include <vector>
 
-#include "./Bullet.hpp"
+#include "../state/State.hpp"
 
 enum class BarrierType {
   NONE,
@@ -12,31 +12,35 @@ enum class BarrierType {
   STONE,
 };
 
-class Barrier {
+class Barrier : public asw::game::GameObject {
  public:
-  Barrier(World* world, const asw::Vec2<float>& position, BarrierType type);
+  Barrier(asw::scene::Scene<States>* scene,
+          const asw::Vec2<float>& position,
+          BarrierType type);
 
-  void update(std::vector<Bullet>& bullets);
-  void draw() const;
+  void update(float deltaTime) override;
+  void draw() override;
 
   float getWidth() const;
   float getHeight() const;
 
-  void makeIndestructible(bool i) { this->indestructible = i; }
+  void hit() {
+    if (indestructible) {
+      return;
+    }
+    health--;
+  }
 
-  bool getDead() const;
+  void makeIndestructible(bool i) { this->indestructible = i; }
 
   asw::Vec2<float> getPosition() const;
 
  private:
-  asw::Quad<float> transform;
-
-  World* worldPointer;
+  asw::scene::Scene<States>* scene;
 
   int health;
 
   bool indestructible = false;
-  bool exploded = false;
 
   static asw::Sample sample_explode;
 
