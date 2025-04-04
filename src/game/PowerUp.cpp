@@ -21,6 +21,8 @@ PowerUp::PowerUp(float x, float y, PowerUpType type) : type(type) {
     default:
       break;
   }
+
+  zIndex = 6;
 }
 
 void PowerUp::draw() {

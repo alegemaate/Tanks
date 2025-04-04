@@ -1,42 +1,25 @@
-#ifndef SRC_UI_BUTTON_H_
-#define SRC_UI_BUTTON_H_
+#pragma once
 
 #include <asw/asw.h>
 #include <string>
 
-class Button {
+class Button : public asw::game::GameObject {
  public:
   // Constructor
-  Button(int x, int y, const std::string& text, asw::Font button_font);
-
-  Button() = default;
-
-  int getWidth() const { return width + padding_x * 2; }
-  int getHeight() const { return height + padding_y * 2; }
-
-  bool setFont(asw::Font font);
+  Button(float x, float y, const std::string& text, const asw::Font& font);
 
   bool clicked() const;
-  void update();
+
+  void update(float deltaTime) override;
 
   // Draw
-  void draw() const;
+  void draw() override;
 
  private:
-  // Variables
-  int x = 0;
-  int y = 0;
-  int width{};
-  int height{};
-  int padding_x = 10;
-  int padding_y = 10;
-  std::string text;
-
   bool hovering = false;
-  bool visible = true;
+
+  std::string text;
 
   // Font
   asw::Font button_font = nullptr;
 };
-
-#endif  // SRC_UI_BUTTON_H_

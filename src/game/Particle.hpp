@@ -13,6 +13,7 @@ enum class ParticleType {
 
 enum class ParticleBehaviour {
   EXPLODE,
+  FIRE,
 };
 
 class Particle : public asw::game::GameObject {
@@ -21,9 +22,9 @@ class Particle : public asw::game::GameObject {
            const asw::Vec2<float>& position,
            asw::Color color,
            float xVelocityMin,
-           float xMax,
-           float yMin,
-           float yMax,
+           float xVelocityMax,
+           float yVelocityMin,
+           float yVelocityMax,
            int size,
            ParticleType type,
            int life,
@@ -33,9 +34,12 @@ class Particle : public asw::game::GameObject {
 
   void draw() override;
 
- private:
-  void drawRandom() const;
+  void drawLight() {
+    asw::draw::stretchSprite(light_buffer,
+                             transform + asw::Quad<float>(-1, -1, 2, 2));
+  }
 
+ private:
   asw::scene::Scene<States>* scene;
 
   asw::Color color;
@@ -45,4 +49,6 @@ class Particle : public asw::game::GameObject {
   ParticleType type;
   int life;
   ParticleBehaviour behaviour;
+
+  asw::Texture light_buffer;
 };

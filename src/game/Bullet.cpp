@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "../system/ImageRegistry.hpp"
 #include "./Barrier.hpp"
 
 // Init
@@ -20,6 +21,8 @@ Bullet::Bullet(asw::scene::Scene<States>* scene,
   transform.position.y = y;
   transform.size.x = 5;
   transform.size.y = 5;
+  zIndex = 1;
+  light_buffer = ImageRegistry::getImage("light");
 }
 
 // Reverse specified vector

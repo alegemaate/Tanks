@@ -6,10 +6,10 @@
 
 #include "../state/State.hpp"
 #include "../system/ImageRegistry.hpp"
+#include "../system/SampleRegistry.hpp"
 #include "../util/tools.h"
 
 unsigned char Tank::num_bullet_bounces = 0;
-asw::Sample Tank::sample_shot;
 
 Tank::Tank(asw::scene::Scene<States>* scene,
            const asw::Vec2<float>& position,
@@ -35,10 +35,7 @@ Tank::Tank(asw::scene::Scene<States>* scene,
   auto screenSize = asw::display::getSize();
   map_width = screenSize.x;
   map_height = screenSize.y;
-
-  if (Tank::sample_shot == nullptr) {
-    Tank::sample_shot = asw::assets::loadSample("assets/sfx/fire.wav");
-  }
+  zIndex = 5;
 }
 
 // Explode
@@ -46,9 +43,8 @@ void Tank::explode() {
   for (int i = 0; i < 200; i++) {
     scene->createObject<Particle>(
         scene, transform.getCenter(),
-        asw::util::makeColor(255, asw::random::between(0, 255), 0), -10.0F,
-        10.0F, -10.0F, 10.0F, 2, ParticleType::SQUARE, 20,
-        ParticleBehaviour::EXPLODE);
+        asw::util::makeColor(255, asw::random::between(0, 255), 0), -2.0F, 2.0F,
+        -2.0F, 2.0F, 4, ParticleType::SQUARE, 200, ParticleBehaviour::FIRE);
   }
 }
 
@@ -122,7 +118,7 @@ void Tank::collidePowerUps() {
 
 // Move around
 void Tank::drive(float rotation, float deltaTime) {
-  float deltaSpeed = speed * (deltaTime / 8.0f);
+  const float deltaSpeed = speed * (deltaTime / 8.0f);
 
   if (canMoveX) {
     transform.position.x += -deltaSpeed * cosf(rotation);
@@ -135,7 +131,7 @@ void Tank::drive(float rotation, float deltaTime) {
 // Shoot
 void Tank::shoot(float rotation, const asw::Vec2<float>& target) {
   if (bullet_delay > fire_delay_rate) {
-    asw::sound::play(sample_shot, 255, 127, 0);
+    asw::sound::play(SampleRegistry::getSample("fire"), 255, 127, 0);
 
     scene->createObject<Bullet>(scene, target.x, target.y, rotation, fire_speed,
                                 1 + num_bullet_bounces, team);
@@ -154,7 +150,7 @@ void Tank::update(float deltaTime) {
   // Just died
   if (alive && (health <= 0)) {
     explode();
-    asw::sound::play(sample_shot, 255, 127, 0);
+    asw::sound::play(SampleRegistry::getSample("tank-explode"), 255, 127, 0);
     alive = false;
   }
 
@@ -175,6 +171,10 @@ void Tank::drawTankBase() {
 
 // Draw turret
 void Tank::drawTankTurret() {
+  if (!alive) {
+    return;
+  }
+
   asw::draw::rotateSprite(image_top, transform.position,
                           rad_to_deg(rotation_turret));
 }
@@ -185,6 +185,10 @@ void Tank::drawHealthBar(float x,
                          int width,
                          int height,
                          int border) const {
+  if (health >= initialHealth || !alive) {
+    return;
+  }
+
   const float healthPercent =
       static_cast<float>(health) / static_cast<float>(initialHealth);
 
@@ -205,15 +209,10 @@ void Tank::draw() {
   drawTankBase();
 
   // Turret
-  if (alive) {
-    drawTankTurret();
+  drawTankTurret();
 
-    // Health bar
-    if (health < initialHealth) {
-      drawHealthBar(transform.position.x - 5, transform.position.y - 10, 50, 6,
-                    1);
-    }
-  }
+  // Health bar
+  drawHealthBar(transform.position.x - 5, transform.position.y - 10, 50, 6, 1);
 }
 
 // Put decals

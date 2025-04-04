@@ -75,8 +75,6 @@ class Tank : public asw::game::GameObject {
   virtual void collideBarriers(float deltaTime);
   virtual void collidePowerUps();
 
-  static asw::Sample sample_shot;
-
   // Update
   void explode();
 

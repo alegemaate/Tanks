@@ -3,10 +3,9 @@
 #include <memory>
 
 #include "../system/ImageRegistry.hpp"
+#include "../system/SampleRegistry.hpp"
 #include "./Particle.hpp"
 #include "./PowerUp.hpp"
-
-asw::Sample Barrier::sample_explode;
 
 Barrier::Barrier(asw::scene::Scene<States>* scene,
                  const asw::Vec2<float>& position,
@@ -16,20 +15,18 @@ Barrier::Barrier(asw::scene::Scene<States>* scene,
 
   switch (type) {
     case BarrierType::BOX:
-      this->image = ImageRegistry::getImage("block-box");
-      this->health = 3;
+      image = ImageRegistry::getImage("block-box");
+      health = 3;
       break;
     default:
-      this->image = ImageRegistry::getImage("block-stone");
-      this->health = 20;
+      image = ImageRegistry::getImage("block-stone");
+      health = 20;
       break;
   }
 
-  transform.size = asw::util::getTextureSize(this->image);
+  transform.size = asw::util::getTextureSize(image);
 
-  if (Barrier::sample_explode == nullptr) {
-    Barrier::sample_explode = asw::assets::loadSample("assets/sfx/explode.wav");
-  }
+  zIndex = 10;
 }
 
 // Update
@@ -65,7 +62,7 @@ void Barrier::explode() {
   alive = false;
 
   // Explode
-  asw::sound::play(sample_explode, 255, 127, 0);
+  asw::sound::play(SampleRegistry::getSample("explode"), 255, 127, 0);
 
   for (int i = 0; i < 100; i++) {
     const asw::Color color =

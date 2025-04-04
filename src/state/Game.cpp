@@ -21,12 +21,23 @@ void Game::init() {
   // Create buffers
   decal_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
   map_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
+  light_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
+  fade_buffer = asw::assets::createTexture(map_width * 40, map_height * 40);
 
   // Setup decal buffer
   asw::display::setRenderTarget(decal_buffer);
-  asw::draw::clearColor(asw::util::makeColor(0, 0, 0, 255));
+  asw::draw::clearColor(asw::util::makeColor(0, 0, 0, 0));
   asw::display::resetRenderTarget();
-  asw::draw::setBlendMode(decal_buffer, asw::BlendMode::ADD);
+
+  // Setup light buffer
+  asw::draw::setBlendMode(light_buffer, asw::BlendMode::ADD);
+  asw::draw::setAlpha(light_buffer, 0.5F);
+
+  // Setup fade buffer
+  asw::display::setRenderTarget(fade_buffer);
+  asw::draw::clearColor(asw::util::makeColor(0, 0, 0, 10));
+  asw::display::resetRenderTarget();
+  asw::draw::setBlendMode(fade_buffer, asw::BlendMode::BLEND);
 
   // Load images
   background = ImageRegistry::getImage("game-background");
@@ -35,6 +46,86 @@ void Game::init() {
   // Font
   font = asw::assets::loadFont("assets/fonts/ariblk.ttf", 12);
 
+  // Create map
+  generateMap();
+}
+
+void Game::update(float deltaTime) {
+  // Update world
+  Scene::update(deltaTime);
+
+  // Return to menu
+  if (asw::input::wasKeyPressed(asw::input::Key::M)) {
+    sceneManager.setNextScene(States::Menu);
+  }
+
+  // Scroll map
+  for (const auto& tank : getObjectView<PlayerTank>()) {
+    auto screen_size = asw::display::getSize();
+    map_position = tank->transform.getCenter() -
+                   asw::Vec2<float>(screen_size.x / 2.0F, screen_size.y / 2.0F);
+  }
+
+  timer += deltaTime;
+}
+
+void Game::draw() {
+  // Draw background
+  asw::draw::sprite(background, asw::Vec2<float>(0, 0));
+
+  // Draw decals
+  asw::display::setRenderTarget(decal_buffer);
+  for (auto& tank : getObjectView<Tank>()) {
+    tank->putDecal();
+  }
+
+  // Draw lights
+  asw::display::setRenderTarget(light_buffer);
+  asw::draw::setBlendMode(light_buffer, asw::BlendMode::ADD);
+  asw::draw::sprite(fade_buffer, asw::Vec2<float>(0, 0));
+  for (auto& bullet : getObjectView<Bullet>()) {
+    bullet->drawLight();
+  }
+
+  for (auto& bullet : getObjectView<Particle>()) {
+    bullet->drawLight();
+  }
+
+  // Blank map map_buffer
+  asw::display::setRenderTarget(map_buffer);
+  asw::draw::clearColor(asw::util::makeColor(0, 88, 0, 255));
+
+  // Decal to buffer
+  asw::draw::sprite(decal_buffer, asw::Vec2<float>(0, 0));
+
+  // Draw world
+  Scene::draw();
+
+  // Light to buffer
+  asw::draw::setBlendMode(light_buffer, asw::BlendMode::MULTIPLY);
+  asw::draw::sprite(light_buffer, asw::Vec2<float>(0, 0));
+
+  // Map to buffer
+  asw::display::resetRenderTarget();
+  asw::draw::sprite(map_buffer, map_position * -1.0F);
+
+  // Text
+  asw::draw::text(font, "Round: " + std::to_string(currentRound),
+                  asw::Vec2<float>(20, 20),
+                  asw::util::makeColor(255, 255, 255));
+  // asw::draw::text(font, "Team BLUE: " + std::to_string(player_tanks.size()),
+  //                 asw::Vec2<float>(20, 35),
+  //                 asw::util::makeColor(255, 255, 255));
+  // asw::draw::text(font, "Team RED: " + std::to_string(enemy_tanks.size()),
+  //                 asw::Vec2<float>(20, 50),
+  //                 asw::util::makeColor(255, 255, 255));
+
+  // Cursor
+  asw::draw::sprite(cursor, asw::Vec2<float>(asw::input::mouse.x - 10,
+                                             asw::input::mouse.y - 10));
+}
+
+void Game::generateMap() {
   // Make a map
   std::array<std::array<BarrierType, max_map_height>, max_map_width> map_temp{};
   std::vector<asw::Vec2<float>> startLocations{};
@@ -137,62 +228,4 @@ void Game::init() {
         createObject<AiTank>(this, startLocation, 100, 4, 1000, 1, false);
     tank->set_map_dimensions(map_width * 40, map_height * 40);
   }
-}
-
-void Game::update(float deltaTime) {
-  // Update world
-  Scene::update(deltaTime);
-
-  // Return to menu
-  if (asw::input::wasKeyPressed(asw::input::Key::M)) {
-    sceneManager.setNextScene(States::Menu);
-  }
-
-  // Scroll map
-  for (const auto& tank : getObjectView<PlayerTank>()) {
-    auto screenSize = asw::display::getSize();
-    map_position = tank->transform.getCenter() -
-                   asw::Vec2<float>(screenSize.x / 2.0F, screenSize.y / 2.0F);
-  }
-}
-
-void Game::draw() {
-  // Draw background
-  asw::draw::sprite(background, asw::Vec2<float>(0, 0));
-
-  // Draw decals
-  asw::display::setRenderTarget(decal_buffer);
-
-  for (auto& tank : getObjectView<Tank>()) {
-    tank->putDecal();
-  }
-
-  // Blank map map_buffer
-  asw::display::setRenderTarget(map_buffer);
-  asw::draw::clearColor(asw::util::makeColor(0, 88, 0, 255));
-
-  // Decal to buffer
-  asw::draw::sprite(decal_buffer, asw::Vec2<float>(0, 0));
-
-  // Draw world
-  Scene::draw();
-
-  // Map to buffer
-  asw::display::resetRenderTarget();
-  asw::draw::sprite(map_buffer, map_position * -1.0F);
-
-  // Text
-  asw::draw::text(font, "Round: " + std::to_string(currentRound),
-                  asw::Vec2<float>(20, 20),
-                  asw::util::makeColor(255, 255, 255));
-  // asw::draw::text(font, "Team BLUE: " + std::to_string(player_tanks.size()),
-  //                 asw::Vec2<float>(20, 35),
-  //                 asw::util::makeColor(255, 255, 255));
-  // asw::draw::text(font, "Team RED: " + std::to_string(enemy_tanks.size()),
-  //                 asw::Vec2<float>(20, 50),
-  //                 asw::util::makeColor(255, 255, 255));
-
-  // Cursor
-  asw::draw::sprite(cursor, asw::Vec2<float>(asw::input::mouse.x - 10,
-                                             asw::input::mouse.y - 10));
 }

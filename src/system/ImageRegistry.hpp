@@ -1,5 +1,4 @@
-#ifndef SRC_SYSTEM_IMAGE_REGISTRY_H_
-#define SRC_SYSTEM_IMAGE_REGISTRY_H_
+#pragma once
 
 #include <asw/asw.h>
 #include <map>
@@ -7,11 +6,9 @@
 
 class ImageRegistry {
  public:
-  static void loadImage(const std::string& imageKey, const std::string& path);
-  static asw::Texture getImage(const std::string& imageKey);
+  static void loadImage(const std::string& key, const std::string& path);
+  static asw::Texture getImage(const std::string& key);
 
  private:
   static std::map<std::string, asw::Texture> images;
 };
-
-#endif  // SRC_SYSTEM_IMAGE_REGISTRY_H_

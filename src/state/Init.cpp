@@ -1,6 +1,7 @@
 #include "Init.hpp"
 
 #include "../system/ImageRegistry.hpp"
+#include "../system/SampleRegistry.hpp"
 
 #include <iostream>
 
@@ -37,6 +38,11 @@ void Init::init() {
                            "assets/images/tank_turret_blue.png");
   ImageRegistry::loadImage("tank-base-blue",
                            "assets/images/tank_base_blue.png");
+  ImageRegistry::loadImage("light", "assets/images/test.png");
+
+  SampleRegistry::loadSample("explode", "assets/sfx/explode.wav");
+  SampleRegistry::loadSample("fire", "assets/sfx/fire.wav");
+  SampleRegistry::loadSample("tank-explode", "assets/sfx/tank_explode.wav");
 
   std::cout << "Loaded images." << std::endl;
 }

@@ -36,9 +36,13 @@ class Game : public asw::scene::Scene<States> {
   static unsigned char num_friends;
 
  private:
+  void generateMap();
+
   // Images
   asw::Texture map_buffer;
   asw::Texture decal_buffer;
+  asw::Texture light_buffer;
+  asw::Texture fade_buffer;
   asw::Texture background;
   asw::Texture cursor;
 
@@ -48,4 +52,6 @@ class Game : public asw::scene::Scene<States> {
   asw::Vec2<float> map_position;
 
   int currentRound = 0;
+
+  float timer = 0.0f;
 };

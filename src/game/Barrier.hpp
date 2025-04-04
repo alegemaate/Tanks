@@ -37,13 +37,8 @@ class Barrier : public asw::game::GameObject {
 
  private:
   asw::scene::Scene<States>* scene;
-
   int health;
-
   bool indestructible = false;
-
-  static asw::Sample sample_explode;
-
   asw::Texture image;
 
   void explode();
