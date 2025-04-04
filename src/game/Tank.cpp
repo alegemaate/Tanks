@@ -6,6 +6,7 @@
 
 #include "../state/State.hpp"
 #include "../system/ImageRegistry.hpp"
+#include "../util/tools.h"
 
 unsigned char Tank::num_bullet_bounces = 0;
 asw::Sample Tank::sample_shot;
@@ -44,7 +45,7 @@ Tank::Tank(asw::scene::Scene<States>* scene,
 void Tank::explode() {
   for (int i = 0; i < 200; i++) {
     scene->createObject<Particle>(
-        transform.getCenter(),
+        scene, transform.getCenter(),
         asw::util::makeColor(255, asw::random::between(0, 255), 0), -10.0F,
         10.0F, -10.0F, 10.0F, 2, ParticleType::SQUARE, 20,
         ParticleBehaviour::EXPLODE);
@@ -81,7 +82,7 @@ void Tank::collideBullets(float deltaTime) {
         asw::Quad<float>(obj->getXVelocity() * (deltaTime / 8.0F),
                          obj->getYVelocity() * (deltaTime / 8.0F), 0, 0);
 
-    if (transform.contains(objTrans)) {
+    if (transform.collides(objTrans)) {
       health -= 10;
       obj->destroy();
     }
@@ -101,10 +102,10 @@ void Tank::collideBarriers(float deltaTime) {
   canMoveY = true;
 
   for (auto& obj : scene->getObjectView<Barrier>()) {
-    if (offsetXPos.contains(obj->transform)) {
+    if (offsetXPos.collides(obj->transform)) {
       canMoveX = false;
     }
-    if (offsetYPos.contains(obj->transform)) {
+    if (offsetYPos.collides(obj->transform)) {
       canMoveY = false;
     }
   }
@@ -112,7 +113,7 @@ void Tank::collideBarriers(float deltaTime) {
 
 void Tank::collidePowerUps() {
   for (auto& obj : scene->getObjectView<PowerUp>()) {
-    if (transform.contains(obj->transform)) {
+    if (transform.collides(obj->transform)) {
       pickupPowerUp(obj->getType());
       obj->pickup();
     }

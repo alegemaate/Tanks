@@ -1,7 +1,5 @@
 #include "ImageRegistry.hpp"
 
-#include "../util/tools.h"
-
 std::map<std::string, asw::Texture> ImageRegistry::images;
 
 void ImageRegistry::loadImage(const std::string& imageKey,

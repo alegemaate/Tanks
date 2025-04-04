@@ -15,7 +15,6 @@
 #include "../game/PlayerTank.hpp"
 #include "../game/PowerUp.hpp"
 #include "../game/Tank.hpp"
-#include "../util/tools.h"
 
 #include "./State.hpp"
 

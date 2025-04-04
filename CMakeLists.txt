@@ -22,7 +22,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
 FetchContent_Declare(
   EnTT
   GIT_REPOSITORY https://github.com/skypjack/entt.git
-  GIT_TAG 344e03ac64a1f78424ab1150e2d4778e8df8431d
+  GIT_TAG        344e03ac64a1f78424ab1150e2d4778e8df8431d
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(EnTT)
@@ -30,7 +30,7 @@ FetchContent_MakeAvailable(EnTT)
 FetchContent_Declare(
   asw
   GIT_REPOSITORY https://github.com/adsgames/asw.git
-  GIT_TAG        v0.5.5
+  GIT_TAG        a5956449fc97501acce9d4c596dc83253d2a9805
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(asw)

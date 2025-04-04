@@ -72,8 +72,8 @@ void Barrier::explode() {
         asw::util::makeColor(255, asw::random::between(0, 255), 0);
 
     // Make particle
-    scene->createObject<Particle>(transform.getCenter(), color, -6.0, 6.0, -6.0,
-                                  6.0, 2, ParticleType::SQUARE, 30,
+    scene->createObject<Particle>(scene, transform.getCenter(), color, -6.0,
+                                  6.0, -6.0, 6.0, 2, ParticleType::SQUARE, 30,
                                   ParticleBehaviour::EXPLODE);
   }
 

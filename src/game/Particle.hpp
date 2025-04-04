@@ -1,8 +1,8 @@
-#ifndef SRC_GAME_PARTICLE_H_
-#define SRC_GAME_PARTICLE_H_
+#pragma once
 
 #include <asw/asw.h>
-#include "../util/tools.h"
+
+#include "../state/State.hpp"
 
 enum class ParticleType {
   CIRCLE,
@@ -17,7 +17,8 @@ enum class ParticleBehaviour {
 
 class Particle : public asw::game::GameObject {
  public:
-  Particle(const asw::Vec2<float>& position,
+  Particle(asw::scene::Scene<States>* scene,
+           const asw::Vec2<float>& position,
            asw::Color color,
            float xVelocityMin,
            float xMax,
@@ -35,6 +36,8 @@ class Particle : public asw::game::GameObject {
  private:
   void drawRandom() const;
 
+  asw::scene::Scene<States>* scene;
+
   asw::Color color;
 
   asw::Vec2<float> velocity;
@@ -43,5 +46,3 @@ class Particle : public asw::game::GameObject {
   int life;
   ParticleBehaviour behaviour;
 };
-
-#endif  // SRC_GAME_PARTICLE_H_

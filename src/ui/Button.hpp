@@ -4,8 +4,6 @@
 #include <asw/asw.h>
 #include <string>
 
-#include "../util/tools.h"
-
 class Button {
  public:
   // Constructor

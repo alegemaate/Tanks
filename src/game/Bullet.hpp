@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../state/State.hpp"
-#include "../util/tools.h"
 #include "./Particle.hpp"
 
 enum class BounceDirection {

@@ -57,26 +57,26 @@ void Bullet::destroy() {
 
     switch (incidenceDirection) {
       case BounceDirection::BOTTOM: {
-        scene->createObject<Particle>(transform.getCenter(), color, -5, 5, 0, 3,
-                                      2, ParticleType::SQUARE, 10,
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -5,
+                                      5, 0, 3, 2, ParticleType::SQUARE, 10,
                                       ParticleBehaviour::EXPLODE);
         break;
       }
       case BounceDirection::TOP: {
-        scene->createObject<Particle>(transform.getCenter(), color, -5, 5, -3,
-                                      0, 2, ParticleType::SQUARE, 10,
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -5,
+                                      5, -3, 0, 2, ParticleType::SQUARE, 10,
                                       ParticleBehaviour::EXPLODE);
         break;
       }
       case BounceDirection::LEFT: {
-        scene->createObject<Particle>(transform.getCenter(), color, -3, 0, -5,
-                                      5, 2, ParticleType::SQUARE, 10,
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -3,
+                                      0, -5, 5, 2, ParticleType::SQUARE, 10,
                                       ParticleBehaviour::EXPLODE);
         break;
       }
       default: {
-        scene->createObject<Particle>(transform.getCenter(), color, 0, 3, -5, 5,
-                                      2, ParticleType::SQUARE, 10,
+        scene->createObject<Particle>(scene, transform.getCenter(), color, 0, 3,
+                                      -5, 5, 2, ParticleType::SQUARE, 10,
                                       ParticleBehaviour::EXPLODE);
         break;
       }
@@ -93,36 +93,23 @@ void Bullet::update(float deltaTime) {
   }
 
   // Move
-  transform.position +=
-      asw::Vec2<float>(velocity.x, velocity.y) * (deltaTime / 8.0F);
+  transform.position += velocity * (deltaTime / 8.0F);
 
   // Bounce
   for (auto& obj : scene->getObjectView<Barrier>()) {
-    if (transform.contains(obj->transform)) {
-      if (collisionBottom(transform.position.y + velocity.y,
-                          transform.position.y + 5,
-                          obj->transform.position.y + obj->transform.size.y)) {
+    if (transform.collides(obj->transform)) {
+      if (transform.collidesBottom(obj->transform)) {
         reverseDirection("y");
         bounce(BounceDirection::BOTTOM);
-      }
-
-      if (collisionTop(transform.position.y,
-                       transform.position.y + 5 + velocity.y,
-                       obj->transform.position.y)) {
+      } else if (transform.collidesTop(obj->transform)) {
         reverseDirection("y");
         bounce(BounceDirection::TOP);
       }
 
-      if (collisionLeft(transform.position.x,
-                        transform.position.x + 5 + velocity.x,
-                        obj->transform.position.x)) {
+      if (transform.collidesLeft(obj->transform)) {
         reverseDirection("x");
         bounce(BounceDirection::LEFT);
-      }
-
-      if (collisionRight(transform.position.x + velocity.x,
-                         transform.position.x + 5,
-                         obj->transform.position.x + obj->transform.size.x)) {
+      } else if (transform.collidesRight(obj->transform)) {
         reverseDirection("x");
         bounce(BounceDirection::RIGHT);
       }

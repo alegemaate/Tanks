@@ -1,7 +1,10 @@
 #include "Particle.hpp"
 
+#include "./Barrier.hpp"
+
 // Constructor
-Particle::Particle(const asw::Vec2<float>& position,
+Particle::Particle(asw::scene::Scene<States>* scene,
+                   const asw::Vec2<float>& position,
                    asw::Color color,
                    float xVelocityMin,
                    float xVelocityMax,
@@ -11,7 +14,7 @@ Particle::Particle(const asw::Vec2<float>& position,
                    ParticleType type,
                    int life,
                    ParticleBehaviour behaviour)
-    : color(color), type(type), life(life), behaviour(behaviour) {
+    : scene(scene), color(color), type(type), life(life), behaviour(behaviour) {
   transform = asw::Quad<float>(position.x, position.y, size, size);
   velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
   velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
@@ -34,9 +37,13 @@ void Particle::update(float deltaTime) {
   if (behaviour == ParticleBehaviour::EXPLODE) {
     transform.position += deltaVelocity;
     velocity -= deltaVelocity / 10.0F;
-  } else {
-    transform.position.x += asw::random::between(-velocity.x, velocity.x);
-    transform.position.y += asw::random::between(-velocity.y, velocity.y);
+  }
+
+  // Bounce
+  for (auto& obj : scene->getObjectView<Barrier>()) {
+    if (transform.collides(obj->transform)) {
+      alive = false;
+    }
   }
 
   // Die
@@ -56,25 +63,6 @@ void Particle::draw() {
       break;
     case ParticleType::CIRCLE:
       asw::draw::circleFill(transform.position, transform.size.x, color);
-      break;
-    case ParticleType::RANDOM:
-      drawRandom();
-      break;
-    default:
-      break;
-  }
-}
-
-void Particle::drawRandom() const {
-  switch (asw::random::between(0, 3)) {
-    case 0:
-      asw::draw::point(transform.position, color);
-      break;
-    case 1:
-      asw::draw::circleFill(transform.position, transform.size.x, color);
-      break;
-    case 2:
-      asw::draw::rectFill(transform, color);
       break;
     default:
       break;
