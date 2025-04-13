@@ -4,21 +4,21 @@
 #include <cmath>
 #include <vector>
 
+#include "../state/State.hpp"
 #include "../system/ImageRegistry.hpp"
-#include "../util/Random.hpp"
+#include "../system/SampleRegistry.hpp"
+#include "../util/tools.h"
 
 unsigned char Tank::num_bullet_bounces = 0;
 
-Tank::Tank(World* worldPointer,
-           float x,
-           float y,
+Tank::Tank(asw::scene::Scene<States>* scene,
+           const asw::Vec2<float>& position,
            int health,
            int fireSpeed,
            int fireDelay,
-           float speed)
-    : x(x),
-      y(y),
-      health(health),
+           float speed,
+           int team)
+    : health(health),
       initialHealth(health),
       fire_speed(fireSpeed),
       fire_delay_rate(fireDelay),
@@ -27,219 +27,201 @@ Tank::Tank(World* worldPointer,
       image_hurt(nullptr),
       image_top(nullptr),
       image_treads(nullptr),
-      worldPointer(worldPointer) {
+      scene(scene),
+      team(team) {
+  transform.position = position;
+
   // Map size
-  map_width = SCREEN_W;
-  map_height = SCREEN_H;
-
-  sample_shot = load_sample_ex("assets/sfx/fire.wav");
-}
-
-// Check dead
-bool Tank::isDead() {
-  return dead;
+  auto screenSize = asw::display::getSize();
+  map_width = screenSize.x;
+  map_height = screenSize.y;
+  zIndex = 5;
 }
 
 // Explode
 void Tank::explode() {
   for (int i = 0; i < 200; i++) {
-    auto* particle = new Particle(
-        getCenterX(), getCenterY(), makecol(255, Random::random(0, 255), 0),
-        -10.0f, 10.0f, -10.0f, 10.0f, 1, ParticleType::CIRCLE, 20,
-        ParticleBehaviour::EXPLODE);
-    worldPointer->addParticle(particle);
+    scene->createObject<Particle>(
+        scene, transform.getCenter(),
+        asw::util::makeColor(255, asw::random::between(0, 255), 0), -2.0F, 2.0F,
+        -2.0F, 2.0F, 4, ParticleType::SQUARE, 200, ParticleBehaviour::FIRE);
   }
 }
 
-void Tank::accelerate(bool moving) {
+void Tank::accelerate(bool moving, float deltaTime) {
   if (moving) {
-    if (speed < 0.1f) {
-      speed = 0.2f;
+    if (speed < 0.1F) {
+      speed = 0.2F;
     } else if (speed < max_speed) {
-      speed *= (max_speed * 1.03f);
+      speed *= (max_speed * 1.03F) * (deltaTime / 8.0F);
     } else {
       speed = max_speed;
     }
   } else {
-    if (speed > 0.1f) {
-      speed *= 0.95f;
+    if (speed > 0.1F) {
+      speed /= 1.05F * (deltaTime / 8.0F);
     } else {
       speed = 0;
     }
   }
 }
 
-// Get bullets
-std::vector<Bullet*>* Tank::getBullets() {
-  return &bullets;
-}
-
 // Check collision
-void Tank::checkCollision(std::vector<Bullet*>* enemyBullets) {
-  for (auto* const& bullet : *enemyBullets) {
-    if (collisionAny(x, x + 50, bullet->getX(),
-                     bullet->getX() + bullet->getXVelocity(), y, y + 50,
-                     bullet->getY(), bullet->getY() + bullet->getYVelocity())) {
+void Tank::collideBullets(float deltaTime) {
+  for (auto& obj : scene->getObjectView<Bullet>()) {
+    if (obj->getTeam() == team) {
+      continue;
+    }
+
+    const auto objTrans =
+        obj->transform +
+        asw::Quad<float>(obj->getXVelocity() * (deltaTime / 8.0F),
+                         obj->getYVelocity() * (deltaTime / 8.0F), 0, 0);
+
+    if (transform.collides(objTrans)) {
       health -= 10;
-      bullet->destroy();
+      obj->destroy();
     }
   }
 }
 
-void Tank::checkCollision(
-    const std::vector<std::unique_ptr<Barrier>>& barriers) {
-  float guess_vector_x = -speed * cosf(rotation_body);
-  float guess_vector_y = -speed * sinf(rotation_body);
+void Tank::collideBarriers(float deltaTime) {
+  const float delta_speed = speed * (deltaTime / 8.0F);
+  const float guess_vector_x = -delta_speed * cosf(rotation_body);
+  const float guess_vector_y = -delta_speed * sinf(rotation_body);
+  const auto offsetXPos =
+      transform + asw::Quad<float>(2 + guess_vector_x, 2, -2, -2);
+  const auto offsetYPos =
+      transform + asw::Quad<float>(2, 2 + guess_vector_y, -2, -2);
 
   canMoveX = true;
   canMoveY = true;
 
-  for (auto const& barrier : barriers) {
-    if (collisionAny(x + 2 + guess_vector_x, x + width - 2 + guess_vector_x,
-                     barrier->getPosition().x,
-                     barrier->getPosition().x + barrier->getWidth(), y + 2,
-                     y + height - 2, barrier->getPosition().y,
-                     barrier->getPosition().y + barrier->getHeight())) {
+  for (auto& obj : scene->getObjectView<Barrier>()) {
+    if (offsetXPos.collides(obj->transform)) {
       canMoveX = false;
     }
-    if (collisionAny(x + 2, x + width - 2, barrier->getPosition().x,
-                     barrier->getPosition().x + barrier->getWidth(),
-                     y + 2 + guess_vector_y, y + height - 2 + guess_vector_y,
-                     barrier->getPosition().y,
-                     barrier->getPosition().y + barrier->getHeight())) {
+    if (offsetYPos.collides(obj->transform)) {
       canMoveY = false;
     }
   }
 }
 
-void Tank::checkCollision(
-    const std::vector<std::unique_ptr<PowerUp>>& power_ups) {
-  for (auto const& power_up : power_ups) {
-    if (collisionAny(x, x + 50, power_up->getX(),
-                     power_up->getX() + power_up->getWidth(), y, y + 50,
-                     power_up->getY(),
-                     power_up->getY() + power_up->getHeight())) {
-      pickupPowerUp(power_up->getType());
-      power_up->pickup();
+void Tank::collidePowerUps() {
+  for (auto& obj : scene->getObjectView<PowerUp>()) {
+    if (transform.collides(obj->transform)) {
+      pickupPowerUp(obj->getType());
+      obj->pickup();
     }
   }
 }
 
 // Move around
-void Tank::drive(float rotation) {
+void Tank::drive(float rotation, float deltaTime) {
+  const float deltaSpeed = speed * (deltaTime / 8.0f);
+
   if (canMoveX) {
-    vector_x = -speed * cosf(rotation);
-    x += vector_x;
+    transform.position.x += -deltaSpeed * cosf(rotation);
   }
   if (canMoveY) {
-    vector_y = -speed * sinf(rotation);
-    y += vector_y;
+    transform.position.y += -deltaSpeed * sinf(rotation);
   }
-}
-
-// Update bullets
-void Tank::update_bullets() {
-  // Update bullets
-  for (auto* const& bullet : bullets) {
-    bullet->update();
-  }
-
-  // Erase bullets
-  bullets.erase(
-      std::remove_if(bullets.begin(), bullets.end(),
-                     [](auto* const& bullet) { return bullet->getErase(); }),
-      bullets.end());
 }
 
 // Shoot
-void Tank::shoot(float rotation, float targetX, float targetY) {
+void Tank::shoot(float rotation, const asw::Vec2<float>& target) {
   if (bullet_delay > fire_delay_rate) {
-    play_sample(sample_shot, 255, 127, Random::random(800, 1200), 0);
+    asw::sound::play(SampleRegistry::getSample("fire"), 255, 127, 0);
 
-    auto* bullet = new Bullet(worldPointer, targetX, targetY, rotation,
-                              fire_speed, 1 + num_bullet_bounces);
-    bullets.push_back(bullet);
+    scene->createObject<Bullet>(scene, target.x, target.y, rotation, fire_speed,
+                                1 + num_bullet_bounces, team);
+
     bullet_delay = 0;
   }
 }
 
 // Update
-void Tank::update(const double deltaTime) {
+void Tank::update(float deltaTime) {
+  // Collides
+  collidePowerUps();
+  collideBarriers(deltaTime);
+  collideBullets(deltaTime);
+
   // Just died
-  if (!dead && (health < 1)) {
+  if (alive && (health <= 0)) {
     explode();
-    play_sample(sample_shot, 255, 127, 500, 0);
-    dead = true;
+    asw::sound::play(SampleRegistry::getSample("tank-explode"), 255, 127, 0);
+    alive = false;
   }
 
-  bullet_delay++;
-
-  update_bullets();
-}
-
-// Draw bullets
-void Tank::drawBullets(BITMAP* buffer) const {
-  for (auto* const& bullet : bullets) {
-    bullet->draw(buffer);
-  }
+  bullet_delay += deltaTime;
 }
 
 // Draw Tank
-void Tank::drawTankBase(BITMAP* buffer) {
+void Tank::drawTankBase() {
   // Hurt image for player
-  if (dead) {
-    rotate_sprite(buffer, image_hurt, x, y, radToFix(rotation_body));
+  if (!alive) {
+    asw::draw::rotateSprite(image_hurt, transform.position,
+                            rad_to_deg(rotation_body));
   } else {
-    rotate_sprite(buffer, image_base, x, y, radToFix(rotation_body));
+    asw::draw::rotateSprite(image_base, transform.position,
+                            rad_to_deg(rotation_body));
   }
 }
 
 // Draw turret
-void Tank::drawTankTurret(BITMAP* buffer) {
-  rotate_sprite(buffer, image_top, x, y, radToFix(rotation_turret));
+void Tank::drawTankTurret() {
+  if (!alive) {
+    return;
+  }
+
+  asw::draw::rotateSprite(image_top, transform.position,
+                          rad_to_deg(rotation_turret));
 }
 
 // Draw health
-void Tank::drawHealthBar(BITMAP* buffer,
-                         float x,
+void Tank::drawHealthBar(float x,
                          float y,
                          int width,
                          int height,
                          int border) const {
-  float healthPercent =
+  if (health >= initialHealth || !alive) {
+    return;
+  }
+
+  const float healthPercent =
       static_cast<float>(health) / static_cast<float>(initialHealth);
 
-  rectfill(buffer, x, y, x + width, y + height, makecol(0, 0, 0));
-  rectfill(buffer, x + border, y + border, x + width - border,
-           y + height - border, makecol(255, 0, 0));
-  rectfill(buffer, x + border, y + border, x + (healthPercent * width) - border,
-           y + height - border, makecol(0, 255, 0));
+  asw::draw::rectFill(asw::Quad<float>(x, y, width, height),
+                      asw::util::makeColor(0, 0, 0));
+  asw::draw::rectFill(
+      asw::Quad<float>(x + border, y + border, width - border, height - border),
+      asw::util::makeColor(255, 0, 0));
+  asw::draw::rectFill(
+      asw::Quad<float>(x + border, y + border, (healthPercent * width) - border,
+                       height - border),
+      asw::util::makeColor(0, 255, 0));
 }
 
 // Draw
-void Tank::draw(BITMAP* buffer) {
+void Tank::draw() {
   // Tank
-  drawTankBase(buffer);
-
-  // Bullets
-  drawBullets(buffer);
+  drawTankBase();
 
   // Turret
-  if (!isDead()) {
-    drawTankTurret(buffer);
+  drawTankTurret();
 
-    // Health bar
-    if (health < initialHealth) {
-      drawHealthBar(buffer, x - 5, y - 10, 50, 6, 1);
-    }
-  }
+  // Health bar
+  drawHealthBar(transform.position.x - 5, transform.position.y - 10, 50, 6, 1);
 }
 
 // Put decals
-void Tank::putDecal(BITMAP* buffer) {
-  if (!dead && speed > 0) {
-    rotate_sprite(buffer, image_treads, getCenterX(), y,
-                  radToFix(rotation_body));
+void Tank::putDecal() {
+  if (alive && speed > 0) {
+    asw::draw::rotateSprite(
+        image_treads,
+        asw::Vec2<float>(transform.getCenter().x, transform.position.y),
+        rad_to_deg(rotation_turret));
   }
 }
 
@@ -247,21 +229,21 @@ void Tank::putDecal(BITMAP* buffer) {
 void Tank::pickupPowerUp(PowerUpType type) {
   switch (type) {
     case PowerUpType::HEALTH:
-      health += 10;
+      health += 25;
       if (health > 100) {
         health = 100;
       }
       break;
     case PowerUpType::SPEED:
-      max_speed += 0.5f;
+      max_speed += 0.25F;
       break;
     case PowerUpType::FIRE_SPEED:
       fire_speed += 1;
       break;
     case PowerUpType::FIRE_DELAY:
-      fire_delay_rate -= 1;
-      if (fire_delay_rate < 0) {
-        fire_delay_rate = 0;
+      fire_delay_rate -= 100;
+      if (fire_delay_rate < 10) {
+        fire_delay_rate = 10;
       }
       break;
     default:

@@ -1,10 +1,8 @@
-#ifndef SRC_GAME_TILE_MAP_H_
-#define SRC_GAME_TILE_MAP_H_
+#pragma once
 
 #include <string>
 #include <vector>
 
-#include "../util/Vec2.hpp"
 #include "Barrier.hpp"
 
 struct TileMapNeighbours {
@@ -29,9 +27,7 @@ class TileMap {
   unsigned char height;
 
   std::vector<Barrier> barriers;
-  std::vector<Vec2<int>> start_locations;
+  std::vector<asw::Vec2<int>> start_locations;
 
   std::vector<std::vector<int>> tile_map;
 };
-
-#endif  // SRC_GAME_TILE_MAP_H_

@@ -1,131 +1,130 @@
 #include "./Bullet.hpp"
-#include "../util/Random.hpp"
 
 #include <cmath>
 
+#include "../system/ImageRegistry.hpp"
+#include "./Barrier.hpp"
+
 // Init
-Bullet::Bullet(World* world,
+Bullet::Bullet(asw::scene::Scene<States>* scene,
                float x,
                float y,
                float angle,
                float speed,
-               int health)
-    : worldPointer(world), x(x), y(y), health(health) {
-  this->vector_x = -speed * cosf(angle);
-  this->vector_y = -speed * sinf(angle);
-}
-
-bool Bullet::getErase() const {
-  return pendingErase;
+               int health,
+               int team)
+    : scene(scene),
+      velocity(-speed * cosf(angle), -speed * sinf(angle)),
+      team(team),
+      health(health) {
+  transform.position.x = x;
+  transform.position.y = y;
+  transform.size.x = 5;
+  transform.size.y = 5;
+  zIndex = 1;
+  light_buffer = ImageRegistry::getImage("light");
 }
 
 // Reverse specified vector
 void Bullet::reverseDirection(const std::string& direction) {
   if (direction == "x") {
-    vector_x = -vector_x;
+    velocity.x = -velocity.x;
   } else if (direction == "y") {
-    vector_y = -vector_y;
+    velocity.y = -velocity.y;
   } else {
-    vector_y = -vector_y;
-    vector_x = -vector_x;
+    velocity.y = -velocity.y;
+    velocity.x = -velocity.x;
   }
-}
-
-// Get coordinates
-float Bullet::getX() const {
-  return x;
-}
-
-float Bullet::getY() const {
-  return y;
 }
 
 // Bounce off wall
 void Bullet::bounce(BounceDirection direction) {
   health--;
   incidenceDirection = direction;
-
-  if (health <= 0) {
-    destroy();
-  }
 }
 
 // Destroy
 void Bullet::destroy() {
   // Has it already died?
-  if (pendingErase) {
+  if (!alive) {
     return;
   }
 
   // Make sure health is 0
   health = 0;
-  pendingErase = true;
+  alive = false;
 
   // Make explosion
   for (int i = 0; i < 100; i++) {
-    Particle* particle;
-    int color = makecol(255, Random::random(0, 255), 0);
+    auto color = asw::util::makeColor(255, asw::random::between(0, 255), 0);
 
     switch (incidenceDirection) {
-      case BounceDirection::BOTTOM:
-        particle =
-            new Particle(x, y, color, -5, 5, 0, 3, 1, ParticleType::CIRCLE, 10,
-                         ParticleBehaviour::EXPLODE);
+      case BounceDirection::BOTTOM: {
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -5,
+                                      5, 0, 3, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
-      case BounceDirection::TOP:
-        particle =
-            new Particle(x, y, color, -5, 5, -3, 0, 1, ParticleType::CIRCLE, 10,
-                         ParticleBehaviour::EXPLODE);
+      }
+      case BounceDirection::TOP: {
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -5,
+                                      5, -3, 0, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
-      case BounceDirection::LEFT:
-        particle =
-            new Particle(x, y, color, -3, 0, -5, 5, 1, ParticleType::CIRCLE, 10,
-                         ParticleBehaviour::EXPLODE);
+      }
+      case BounceDirection::LEFT: {
+        scene->createObject<Particle>(scene, transform.getCenter(), color, -3,
+                                      0, -5, 5, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
-      default:
-        particle =
-            new Particle(x, y, color, 0, 3, -5, 5, 1, ParticleType::CIRCLE, 10,
-                         ParticleBehaviour::EXPLODE);
+      }
+      default: {
+        scene->createObject<Particle>(scene, transform.getCenter(), color, 0, 3,
+                                      -5, 5, 2, ParticleType::SQUARE, 10,
+                                      ParticleBehaviour::EXPLODE);
         break;
+      }
     }
-
-    worldPointer->addParticle(particle);
   }
 }
 
-// Return velocities
-float Bullet::getXVelocity() const {
-  return vector_x;
-}
-
-float Bullet::getYVelocity() const {
-  return vector_y;
-}
-
 // Update bullets
-void Bullet::update() {
-  if (health > 0) {
-    // Move
-    x += vector_x;
-    y += vector_y;
+void Bullet::update(float deltaTime) {
+  // Destroy if out of bounds or health is 0
+  if (health <= 0 || transform.position.x < 0 || transform.position.x > 10000 ||
+      transform.position.y < 0 || transform.position.y > 10000) {
+    destroy();
+  }
 
-    // Off screen
-    if (x < 0 || x > 10000 || y < 0 || y > 10000) {
-      destroy();
+  // Move
+  transform.position += velocity * (deltaTime / 8.0F);
+
+  // Bounce
+  for (auto& obj : scene->getObjectView<Barrier>()) {
+    if (transform.collides(obj->transform)) {
+      if (transform.collidesBottom(obj->transform)) {
+        reverseDirection("y");
+        bounce(BounceDirection::BOTTOM);
+      } else if (transform.collidesTop(obj->transform)) {
+        reverseDirection("y");
+        bounce(BounceDirection::TOP);
+      }
+
+      if (transform.collidesLeft(obj->transform)) {
+        reverseDirection("x");
+        bounce(BounceDirection::LEFT);
+      } else if (transform.collidesRight(obj->transform)) {
+        reverseDirection("x");
+        bounce(BounceDirection::RIGHT);
+      }
+
+      obj->hit();
     }
   }
 }
 
 // Draw image
-void Bullet::draw(BITMAP* buffer) const {
-  int x_int = static_cast<int>(x);
-  int y_int = static_cast<int>(y);
-
-  if (health > 0) {
-    rectfill(buffer, x_int, y_int, x_int + 5, y_int + 5, makecol(0, 0, 0));
-    rectfill(buffer, x_int + 1, y_int + 1, x_int + 4, y_int + 4,
-             makecol(255, 0, 0));
-    rectfill(buffer, x_int + 2, y_int + 2, x_int + 3, y_int + 3,
-             makecol(0, 255, 0));
-  }
+void Bullet::draw() {
+  asw::draw::rectFill(transform, asw::util::makeColor(0, 0, 0));
+  const auto inner = transform + asw::Quad<float>(1, 1, -1, -1);
+  asw::draw::rectFill(inner, asw::util::makeColor(255, 0, 0));
 }

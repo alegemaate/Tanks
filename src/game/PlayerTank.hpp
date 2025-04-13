@@ -5,15 +5,14 @@
 
 class PlayerTank : public Tank {
  public:
-  PlayerTank(World* world,
-             float x,
-             float y,
+  PlayerTank(asw::scene::Scene<States>* scene,
+             const asw::Vec2<float>& position,
              int health,
              int fireSpeed,
              int fireDelay,
              float speed);
 
-  void update(const double deltaTime) override;
+  void update(float deltaTime) override;
 };
 
 #endif  // SRC_GAME_PLAYER_TANK_H_

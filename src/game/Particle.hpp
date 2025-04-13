@@ -1,8 +1,8 @@
-#ifndef SRC_GAME_PARTICLE_H_
-#define SRC_GAME_PARTICLE_H_
+#pragma once
 
-#include <allegro.h>
-#include "../util/tools.h"
+#include <asw/asw.h>
+
+#include "../state/State.hpp"
 
 enum class ParticleType {
   CIRCLE,
@@ -13,45 +13,42 @@ enum class ParticleType {
 
 enum class ParticleBehaviour {
   EXPLODE,
+  FIRE,
 };
 
-class Particle {
+class Particle : public asw::game::GameObject {
  public:
-  Particle(float x,
-           float y,
-           int color,
+  Particle(asw::scene::Scene<States>* scene,
+           const asw::Vec2<float>& position,
+           asw::Color color,
            float xVelocityMin,
-           float xMax,
-           float yMin,
-           float yMax,
+           float xVelocityMax,
+           float yVelocityMin,
+           float yVelocityMax,
            int size,
            ParticleType type,
            int life,
            ParticleBehaviour behavior);
 
-  void logic();
+  void update(float deltaTime) override;
 
-  void draw(BITMAP* buffer) const;
+  void draw() override;
 
-  bool getDead() const;
+  void drawLight() {
+    asw::draw::stretchSprite(light_buffer,
+                             transform + asw::Quad<float>(-1, -1, 2, 2));
+  }
 
  private:
-  void drawRandom(BITMAP* buffer) const;
+  asw::scene::Scene<States>* scene;
 
-  float x;
-  float y;
+  asw::Color color;
 
-  int color;
+  asw::Vec2<float> velocity;
 
-  int size;
   ParticleType type;
   int life;
   ParticleBehaviour behaviour;
 
-  float xVelocity;
-  float yVelocity;
-
-  bool dead = false;
+  asw::Texture light_buffer;
 };
-
-#endif  // SRC_GAME_PARTICLE_H_

@@ -2,7 +2,9 @@
 
 #include "../system/ImageRegistry.hpp"
 
-PowerUp::PowerUp(float x, float y, PowerUpType type) : x(x), y(y), type(type) {
+PowerUp::PowerUp(float x, float y, PowerUpType type) : type(type) {
+  transform = asw::Quad<float>(x, y, 40.0F, 40.0F);
+
   switch (type) {
     case PowerUpType::HEALTH:
       imageKey = "power-up-health";
@@ -19,9 +21,11 @@ PowerUp::PowerUp(float x, float y, PowerUpType type) : x(x), y(y), type(type) {
     default:
       break;
   }
+
+  zIndex = 6;
 }
 
-void PowerUp::draw(BITMAP* buffer) const {
-  BITMAP* image = ImageRegistry::getImage(imageKey);
-  draw_sprite(buffer, image, static_cast<int>(x), static_cast<int>(y));
+void PowerUp::draw() {
+  asw::Texture image = ImageRegistry::getImage(imageKey);
+  asw::draw::sprite(image, transform.position);
 }

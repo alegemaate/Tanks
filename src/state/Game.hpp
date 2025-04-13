@@ -3,10 +3,9 @@
  * Allan Legemaate
  * 20/08/2017
  **/
-#ifndef SRC_STATE_GAME_H_
-#define SRC_STATE_GAME_H_
+#pragma once
 
-#include <allegro.h>
+#include <asw/asw.h>
 #include <array>
 #include <memory>
 #include <vector>
@@ -16,22 +15,17 @@
 #include "../game/PlayerTank.hpp"
 #include "../game/PowerUp.hpp"
 #include "../game/Tank.hpp"
-#include "../game/World.hpp"
-#include "../util/Vec2.hpp"
-#include "../util/tools.h"
 
-#include "./State.h"
+#include "./State.hpp"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846264338327
-#endif
-
-class Game : public State {
+class Game : public asw::scene::Scene<States> {
  public:
-  Game();
-  ~Game() override;
+  using asw::scene::Scene<States>::Scene;
 
-  void update(const double deltaTime) override;
+  void init() override;
+
+  void update(float deltaTime) override;
+
   void draw() override;
 
   // Map stuff
@@ -42,28 +36,22 @@ class Game : public State {
   static unsigned char num_friends;
 
  private:
+  void generateMap();
+
   // Images
-  BITMAP* buffer;
-  BITMAP* map_buffer;
-  BITMAP* decal_buffer;
-  BITMAP* vision_buffer;
-  BITMAP* background;
-  BITMAP* cursor;
+  asw::Texture map_buffer;
+  asw::Texture decal_buffer;
+  asw::Texture light_buffer;
+  asw::Texture fade_buffer;
+  asw::Texture background;
+  asw::Texture cursor;
 
-  // World
-  World game_world;
+  // Fonts
+  asw::Font font;
 
-  // Objects
-  std::vector<std::unique_ptr<Barrier>> barriers;
-  std::vector<Tank*> enemy_tanks;
-  std::vector<Tank*> player_tanks;
-  std::vector<std::unique_ptr<PowerUp>> power_ups;
-  std::vector<Vec2<float>> startLocations;
-
-  float map_x = 0;
-  float map_y = 0;
+  asw::Vec2<float> map_position;
 
   int currentRound = 0;
-};
 
-#endif  // SRC_STATE_GAME_H_
+  float timer = 0.0f;
+};

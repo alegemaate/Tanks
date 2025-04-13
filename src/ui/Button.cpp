@@ -1,49 +1,43 @@
 #include "Button.hpp"
 
-// Constructor
-Button::Button(int x, int y, const std::string& text, FONT* button_font)
-    : x(x), y(y), text(text) {
-  setFont(button_font);
-}
+using namespace asw::input;
 
-// Set new font
-bool Button::setFont(FONT* font) {
-  this->button_font = font;
-  if (button_font != nullptr) {
-    this->width = text_length(button_font, text.c_str());
-    this->height = text_height(button_font);
-    return true;
-  }
-  return false;
+constexpr float BUTTON_PADDING = 20.0F;
+
+// Constructor
+Button::Button(float x, float y, const std::string& text, const asw::Font& font)
+    : text(text), button_font(font) {
+  transform.setPosition(x, y);
+
+  auto text_size = asw::util::getTextSize(button_font, text);
+  transform.setSize(text_size.x + BUTTON_PADDING, text_size.y + BUTTON_PADDING);
+
+  zIndex = 1;
 }
 
 // Update
-void Button::update() {
-  hovering = mouse_x > x && mouse_x < x + getWidth() && mouse_y > y &&
-             mouse_y < y + getHeight();
+void Button::update(float _deltaTime) {
+  hovering = transform.contains(asw::input::mouse.x, asw::input::mouse.y);
 }
 
 // True if clicked
 bool Button::clicked() const {
-  return hovering && MouseListener::mouse_pressed & 1;
+  return hovering &&
+         asw::input::wasButtonPressed(asw::input::MouseButton::LEFT);
 }
 
 // Draw
-void Button::draw(BITMAP* tempBitmap) const {
-  if (visible) {
-    // Backdrop
-    const int c_element = hovering ? 220 : 200;
+void Button::draw() {
+  // Backdrop
+  const int c_element = hovering ? 220 : 200;
 
-    rectfill(tempBitmap, x, y, x + width + padding_x * 2,
-             y + height + padding_y * 2,
-             makecol(c_element, c_element, c_element));
-    rect(tempBitmap, x, y, x + width + padding_x * 2,
-         y + height + padding_y * 2, makecol(0, 0, 0));
+  asw::draw::rectFill(transform,
+                      asw::util::makeColor(c_element, c_element, c_element));
+  asw::draw::rect(transform, asw::util::makeColor(0, 0, 0));
 
-    // Text
-    if (button_font != nullptr) {
-      textprintf_ex(tempBitmap, button_font, x + padding_x, y + padding_y,
-                    makecol(0, 0, 0), -1, text.c_str());
-    }
-  }
+  // Text
+  const float padding = BUTTON_PADDING / 2.0F;
+  asw::draw::text(button_font, text,
+                  transform.position + asw::Vec2<float>(padding, padding),
+                  asw::util::makeColor(0, 0, 0));
 }

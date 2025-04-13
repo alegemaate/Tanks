@@ -32,7 +32,6 @@ $RECYCLE.BIN/
 # Icon must ends with two \r.
 Icon
 
-
 # Thumbnails
 ._*
 
@@ -40,21 +39,5 @@ Icon
 .Spotlight-V100
 .Trashes
 
-*.o
-*.res
-*.dll
-*.exe
-build/RobotFlier
-CppCheckResults.xml
-scores.dat
-build/screenshots
-CMakeFiles
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-.cmake
-Testing
-*.ninja*
-_deps
-compile_commands.json
-build/
+# Build
+/build

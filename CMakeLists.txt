@@ -1,41 +1,39 @@
 cmake_minimum_required(VERSION 3.24)
 
-set(CMAKE_CXX_STANDARD 17)
+project(Tanks VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target)
 
-include(FetchContent)
+include(cmake/get_cpm.cmake)
+CPMAddPackage("gh:adsgames/asw@0.5.7")
 
-project(Tanks)
-
-# Find libs
-find_library(ALLEGRO_LIBRARY NAMES liballeg44.dll.a liballeg.dll.a liballeg.so liballeg.dylib)
-find_library(ALLEGRO_PNG_LIBRARY NAMES libloadpng.dll.a libloadpng.so libloadpng.dylib)
-
-# Source code
-file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp)
-file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
-
-FetchContent_Declare(
-  EnTT
-  GIT_REPOSITORY https://github.com/skypjack/entt.git
-  GIT_TAG        344e03ac64a1f78424ab1150e2d4778e8df8431d
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+  asw
 )
-FetchContent_MakeAvailable(EnTT)
 
-# Link Libs
-if (MINGW)
-  target_link_libraries(${PROJECT_NAME} -lmingw32)
-endif (MINGW)
+if(EMSCRIPTEN)
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME "index"
+    SUFFIX ".html"
+  )
 
-target_link_libraries(${PROJECT_NAME} ${ALLEGRO_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${ALLEGRO_PNG_LIBRARY})
-target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++ EnTT::EnTT)
+  target_link_options(${PROJECT_NAME} PRIVATE
+    -sWASM=1
+    -sALLOW_MEMORY_GROWTH=1
+    -sMAXIMUM_MEMORY=1gb
+  )
 
-file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets/ DESTINATION ${CMAKE_BINARY_DIR}/build/assets/)
+  set_target_properties(${PROJECT_NAME} PROPERTIES
+    LINK_FLAGS "--preload-file ${CMAKE_CURRENT_LIST_DIR}/assets@/assets --use-preload-plugins --shell-file ${CMAKE_CURRENT_LIST_DIR}/index.html"
+  )
+endif()
+
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/)

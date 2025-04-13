@@ -1,7 +1,6 @@
-#ifndef SRC_GAME_TANK_H_
-#define SRC_GAME_TANK_H_
+#pragma once
 
-#include <allegro.h>
+#include <asw/asw.h>
 #include <memory>
 #include <vector>
 
@@ -9,55 +8,35 @@
 #include "./Bullet.hpp"
 #include "./Particle.hpp"
 #include "./PowerUp.hpp"
-#include "./World.hpp"
 
-class Tank {
+class Tank : public asw::game::GameObject {
  public:
-  explicit Tank(World* worldPointer,
-                float x,
-                float y,
+  explicit Tank(asw::scene::Scene<States>* scene,
+                const asw::Vec2<float>& position,
                 int health,
                 int fireSpeed,
                 int fireDelay,
-                float speed);
+                float speed,
+                int team);
 
   virtual ~Tank() = default;
 
-  virtual bool isDead();
+  void update(float deltaTime) override;
+  void draw() override;
+  virtual void putDecal();
 
-  virtual std::vector<Bullet*>* getBullets();
-
-  virtual void update(const double deltaTime);
-  virtual void draw(BITMAP* buffer);
-  virtual void putDecal(BITMAP* buffer);
-
-  virtual float getX() { return x; }
-  virtual float getY() { return y; }
-
-  virtual float getCenterX() { return x + width / 2.0f; }
-  virtual float getCenterY() { return y + height / 2.0f; }
+  int getTeam() const { return team; }
 
   virtual void set_map_dimensions(int mWidth, int mHeight) {
     map_width = mWidth;
     map_height = mHeight;
   }
 
-  virtual void checkCollision(std::vector<Bullet*>* enemyBullets);
-  virtual void checkCollision(
-      const std::vector<std::unique_ptr<Barrier>>& barriers);
-  virtual void checkCollision(
-      const std::vector<std::unique_ptr<PowerUp>>& power_ups);
-
-  virtual void process_enemies(std::vector<Tank*>* otherTanks);
-
   virtual void pickupPowerUp(PowerUpType type);
 
   static unsigned char num_bullet_bounces;
 
  protected:
-  float x;
-  float y;
-
   int health;
   int initialHealth;
   int fire_speed;
@@ -66,58 +45,41 @@ class Tank {
   float max_speed;
   float speed = 0;
 
-  BITMAP* image_base;
-  BITMAP* image_hurt;
-  BITMAP* image_top;
-  BITMAP* image_treads;
+  asw::Texture image_base;
+  asw::Texture image_hurt;
+  asw::Texture image_top;
+  asw::Texture image_treads;
 
-  World* worldPointer;
-
-  bool dead = false;
+  asw::scene::Scene<States>* scene;
 
   float rotation_body = 0;
   float rotation_turret = 0;
 
   int bullet_delay = 0;
 
-  float width = 0;
-  float height = 0;
-
   int map_width;
   int map_height;
-
-  float vector_x = 0;
-  float vector_y = 0;
 
   bool canMoveX = true;
   bool canMoveY = true;
 
-  std::vector<Tank*>* otherTanks;
+  int team;
 
   // Update
-  void drive(float rotation);
-  void shoot(float rotation, float targetX, float targetY);
-  void accelerate(bool moving);
+  void drive(float rotation, float deltaTime);
+  void shoot(float rotation, const asw::Vec2<float>& target);
+  void accelerate(bool moving, float deltaTime);
 
  private:
-  std::vector<Bullet*> bullets;
-
-  SAMPLE* sample_shot;
+  virtual void collideBullets(float deltaTime);
+  virtual void collideBarriers(float deltaTime);
+  virtual void collidePowerUps();
 
   // Update
-  void update_bullets();
   void explode();
 
   // Draw
-  void drawBullets(BITMAP* buffer) const;
-  void drawTankBase(BITMAP* buffer);
-  void drawTankTurret(BITMAP* buffer);
-  void drawHealthBar(BITMAP* buffer,
-                     float x,
-                     float y,
-                     int width,
-                     int height,
-                     int border) const;
+  void drawTankBase();
+  void drawTankTurret();
+  void drawHealthBar(float x, float y, int width, int height, int border) const;
 };
-
-#endif  // SRC_GAME_TANK_H_

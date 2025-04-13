@@ -2,9 +2,9 @@
   "configurations": [
     {
       "name": "Win32",
-      "includePath": ["${default}", "${workspaceFolder}/_deps/entt-src/src"],
+      "includePath": ["${default}"],
       "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
-      "compileCommands": "${workspaceFolder}/compile_commands.json",
+      "compileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
       "configurationProvider": "ms-vscode.cmake-tools"
     }
   ],

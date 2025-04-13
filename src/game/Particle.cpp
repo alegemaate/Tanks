@@ -1,10 +1,12 @@
 #include "Particle.hpp"
-#include "../util/Random.hpp"
+
+#include "../system/ImageRegistry.hpp"
+#include "./Barrier.hpp"
 
 // Constructor
-Particle::Particle(float x,
-                   float y,
-                   int color,
+Particle::Particle(asw::scene::Scene<States>* scene,
+                   const asw::Vec2<float>& position,
+                   asw::Color color,
                    float xVelocityMin,
                    float xVelocityMax,
                    float yVelocityMin,
@@ -13,81 +15,65 @@ Particle::Particle(float x,
                    ParticleType type,
                    int life,
                    ParticleBehaviour behaviour)
-    : x(x),
-      y(y),
-      color(color),
-      size(size),
-      type(type),
-      life(life),
-      behaviour(behaviour) {
-  this->xVelocity = Random::randomFloat(xVelocityMin, xVelocityMax);
-  this->yVelocity = Random::randomFloat(yVelocityMin, yVelocityMax);
+    : scene(scene), color(color), type(type), life(life), behaviour(behaviour) {
+  transform = asw::Quad<float>(position.x, position.y, size, size);
+  velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
+  velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
+  light_buffer = ImageRegistry::getImage("light");
 
   // No unmoving
-  if (xVelocity < 0.1f && xVelocity > -0.1f) {
-    this->xVelocity = 0.1f;
+  if (velocity.x < 0.1F && velocity.x > -0.1F) {
+    velocity.x = 0.1F;
   }
-  if (yVelocity < 0.1f && yVelocity > -0.1f) {
-    this->yVelocity = 0.1f;
+
+  if (velocity.y < 0.1F && velocity.y > -0.1F) {
+    velocity.y = 0.1F;
+  }
+
+  if (behaviour == ParticleBehaviour::EXPLODE) {
+    zIndex = asw::random::between(0, 9);
+  } else {
+    zIndex = 0;
   }
 }
 
 // Logic
-void Particle::logic() {
+void Particle::update(float deltaTime) {
+  auto deltaVelocity = velocity * (deltaTime / 8.0F);
+
   // Behaviour
   if (behaviour == ParticleBehaviour::EXPLODE) {
-    x += xVelocity;
-    y += yVelocity;
-    xVelocity -= xVelocity / 10;
-    yVelocity -= yVelocity / 10;
-  } else {
-    x += Random::randomFloat(-xVelocity, xVelocity);
-    y += Random::randomFloat(-yVelocity, yVelocity);
+    transform.position += deltaVelocity;
+    velocity -= deltaVelocity / 10.0F;
+  } else if (behaviour == ParticleBehaviour::FIRE) {
+    transform.position += deltaVelocity;
+    velocity -= deltaVelocity * 0.05F;
   }
+
+  // Die on collision
+  // for (auto& obj : scene->getObjectView<Barrier>()) {
+  //   if (transform.collides(obj->transform)) {
+  //     alive = false;
+  //   }
+  // }
 
   // Die
-  if (Random::random(0, life) == 0) {
-    dead = true;
+  if (asw::random::between(0, life) < (deltaTime / 8.0F)) {
+    alive = false;
   }
-}
-
-// Check death
-bool Particle::getDead() const {
-  return dead;
 }
 
 // Draw
-void Particle::draw(BITMAP* buffer) const {
+void Particle::draw() {
   switch (type) {
     case ParticleType::PIXEL:
-      putpixel(buffer, static_cast<int>(x), static_cast<int>(y), color);
+      asw::draw::point(transform.position, color);
       break;
     case ParticleType::SQUARE:
-      rectfill(buffer, static_cast<int>(x), static_cast<int>(y),
-               static_cast<int>(x) + size, static_cast<int>(y) + size, color);
+      asw::draw::rectFill(transform, color);
       break;
     case ParticleType::CIRCLE:
-      circlefill(buffer, static_cast<int>(x), static_cast<int>(y), size, color);
-      break;
-    case ParticleType::RANDOM:
-      drawRandom(buffer);
-      break;
-    default:
-      break;
-  }
-}
-
-void Particle::drawRandom(BITMAP* buffer) const {
-  switch (Random::random(0, 3)) {
-    case 0:
-      putpixel(buffer, static_cast<int>(x), static_cast<int>(y), color);
-      break;
-    case 1:
-      circlefill(buffer, static_cast<int>(x), static_cast<int>(y), size, color);
-      break;
-    case 2:
-      rectfill(buffer, static_cast<int>(x), static_cast<int>(y),
-               static_cast<int>(x) + size, static_cast<int>(y) + size, color);
+      asw::draw::circleFill(transform.position, transform.size.x, color);
       break;
     default:
       break;

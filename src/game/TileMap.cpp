@@ -1,5 +1,4 @@
 #include "TileMap.hpp"
-#include "../util/Random.hpp"
 
 // Generate a new map
 void TileMap::generateMap(unsigned char mapWidth, unsigned char mapHeight) {
@@ -32,7 +31,7 @@ void TileMap::generateMap(unsigned char mapWidth, unsigned char mapHeight) {
 
           // Pass 2 (Well Placed blocks)
           case 2: {
-            const bool should_place = Random::random(0, 2) == 1;
+            const bool should_place = asw::random::between(0, 2) == 1;
 
             if (should_place && neighbours.n == 0 && neighbours.e == 0 &&
                 neighbours.s == 0 && neighbours.w == 0 && neighbours.ne == 0 &&
@@ -63,7 +62,7 @@ void TileMap::generateMap(unsigned char mapWidth, unsigned char mapHeight) {
 
           // Pass 5 (Boxes!)
           case 5: {
-            if (tile_map[i][t] == 0 && Random::random(1, 20) == 1) {
+            if (tile_map[i][t] == 0 && asw::random::between(1, 20) == 1) {
               tile_map[i][t] = 2;
             }
             break;

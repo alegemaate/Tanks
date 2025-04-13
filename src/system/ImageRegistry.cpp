@@ -1,28 +1,16 @@
 #include "ImageRegistry.hpp"
 
-#include <loadpng.h>
+std::map<std::string, asw::Texture> ImageRegistry::images;
 
-#include "../util/tools.h"
-
-std::map<std::string, BITMAP*> ImageRegistry::images;
-
-void ImageRegistry::loadImage(const std::string& imageKey,
-                              const std::string& path) {
-  BITMAP* image = load_png(path.c_str(), nullptr);
-
-  if (!image) {
-    abort_on_error("Cannot find image " + path +
-                   "\nPlease check your files and try again");
-  }
-
-  ImageRegistry::images[imageKey] = image;
+void ImageRegistry::loadImage(const std::string& key, const std::string& path) {
+  ImageRegistry::images[key] = asw::assets::loadTexture(path);
 }
 
-BITMAP* ImageRegistry::getImage(const std::string& imageKey) {
-  auto* image = ImageRegistry::images[imageKey];
+asw::Texture ImageRegistry::getImage(const std::string& key) {
+  auto image = ImageRegistry::images[key];
 
   if (!image) {
-    abort_on_error("Cannot find image " + imageKey);
+    asw::util::abortOnError("Cannot find image " + key);
   }
 
   return image;

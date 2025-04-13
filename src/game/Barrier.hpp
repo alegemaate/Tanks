@@ -1,10 +1,9 @@
-#ifndef SRC_GAME_BARRIER_H_
-#define SRC_GAME_BARRIER_H_
+#pragma once
 
+#include <asw/asw.h>
 #include <vector>
 
-#include "../util/Vec2.hpp"
-#include "./Bullet.hpp"
+#include "../state/State.hpp"
 
 enum class BarrierType {
   NONE,
@@ -12,43 +11,34 @@ enum class BarrierType {
   STONE,
 };
 
-class Barrier {
+class Barrier : public asw::game::GameObject {
  public:
-  Barrier(World* world, const Vec2<float>& position, BarrierType type);
-  ~Barrier();
+  Barrier(asw::scene::Scene<States>* scene,
+          const asw::Vec2<float>& position,
+          BarrierType type);
 
-  void update(const std::vector<Bullet*>* bullets);
-  void draw(BITMAP* image);
+  void update(float deltaTime) override;
+  void draw() override;
 
   float getWidth() const;
   float getHeight() const;
 
-  void makeIndestructible(bool indestructible) {
-    this->indestructible = indestructible;
+  void hit() {
+    if (indestructible) {
+      return;
+    }
+    health--;
   }
 
-  bool getDead() const;
+  void makeIndestructible(bool i) { this->indestructible = i; }
 
-  Vec2<float> getPosition() const;
+  asw::Vec2<float> getPosition() const;
 
  private:
-  Vec2<float> position;
-
-  World* worldPointer;
-
+  asw::scene::Scene<States>* scene;
   int health;
-
   bool indestructible = false;
-  bool exploded = false;
-
-  float width;
-  float height;
-
-  SAMPLE* sample_explode;
-
-  BITMAP* image;
+  asw::Texture image;
 
   void explode();
 };
-
-#endif  // SRC_GAME_BARRIER_H_

@@ -1,5 +1,4 @@
-#ifndef SRC_COMPONENTS_TRANSFORM_HPP_
-#define SRC_COMPONENTS_TRANSFORM_HPP_
+#pragma once
 
 class Transform final {
  public:
@@ -16,5 +15,3 @@ class Transform final {
 
   double y;
 };
-
-#endif  // SRC_COMPONENTS_TRANSFORM_HPP_
