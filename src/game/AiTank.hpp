@@ -1,5 +1,4 @@
-#ifndef SRC_GAME_AI_TANK_H_
-#define SRC_GAME_AI_TANK_H_
+#pragma once
 
 #include "../state/State.hpp"
 #include "Tank.hpp"
@@ -24,5 +23,3 @@ class AiTank : public Tank {
   void find_enemy_target();
   void ai_drive(float deltaTime);
 };
-
-#endif  // SRC_GAME_AI_TANK_H_

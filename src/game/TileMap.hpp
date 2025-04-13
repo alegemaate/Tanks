@@ -1,5 +1,4 @@
-#ifndef SRC_GAME_TILE_MAP_H_
-#define SRC_GAME_TILE_MAP_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -32,5 +31,3 @@ class TileMap {
 
   std::vector<std::vector<int>> tile_map;
 };
-
-#endif  // SRC_GAME_TILE_MAP_H_

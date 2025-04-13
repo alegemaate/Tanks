@@ -1,5 +1,4 @@
-#ifndef SRC_GAME_BARRIER_H_
-#define SRC_GAME_BARRIER_H_
+#pragma once
 
 #include <asw/asw.h>
 #include <vector>
@@ -43,5 +42,3 @@ class Barrier : public asw::game::GameObject {
 
   void explode();
 };
-
-#endif  // SRC_GAME_BARRIER_H_

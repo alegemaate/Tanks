@@ -1,7 +1,8 @@
 # Tanks
 
-![sonarcloud](https://sonarcloud.io/api/project_badges/measure?project=alegemaate_Tanks&metric=code_smells)
-![sonarcloud](https://sonarcloud.io/api/project_badges/measure?project=alegemaate_Tanks&metric=bugs)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=alegemaate_Tanks&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=alegemaate_Tanks)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=alegemaate_Tanks&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=alegemaate_Tanks)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=alegemaate_Tanks&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=alegemaate_Tanks)
 
 A 2D, top down, tank fighting game built using SDL2
 
@@ -9,38 +10,16 @@ A 2D, top down, tank fighting game built using SDL2
 
 ## Setup
 
-### Dependencies
-
-Dependencies are managed by CMake.
-
-### Windows (MSYS2)
+### CMake
 
 ```bash
-pacman -S mingw-w64-i686-gcc-libs mingw-w64-i686-SDL2 mingw-w64-i686-SDL2_mixer mingw-w64-i686-SDL2_image mingw-w64-i686-SDL2_ttf
-```
-
-### Mac OS
-
-```bash
-brew install sdl2 sdl2_image sdl2_ttf sdl2_mixer
-```
-
-### Linux
-
-```bash
-sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev
-```
-
-### Build
-
-```bash
-cmake .
-make
+cmake --preset debug
+cmake --build --preset debug
 ```
 
 ### Build Emscripten
 
 ```bash
-emcmake cmake .
-make
+emcmake cmake --preset debug
+cmake --build --preset debug
 ```

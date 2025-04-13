@@ -1,6 +1,5 @@
 
-#ifndef SRC_COMPONENTS_SPRITE_HPP_
-#define SRC_COMPONENTS_SPRITE_HPP_
+#pragma once
 
 #include <string>
 
@@ -17,5 +16,3 @@ class Sprite final {
  public:
   std::string key;
 };
-
-#endif  // SRC_COMPONENTS_SPRITE_HPP_
