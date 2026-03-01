@@ -1,2 +1,5 @@
----
-BasedOnStyle: Chromium
+BasedOnStyle: WebKit
+IndentWidth: 4
+ColumnLimit: 100
+SortIncludes: true
+AllowShortFunctionsOnASingleLine: Empty

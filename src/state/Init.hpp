@@ -9,19 +9,22 @@
 
 #include "./Game.hpp"
 #include "./Menu.hpp"
+#include "./PostGame.hpp"
 #include "./State.hpp"
 
 class Init : public asw::scene::Scene<States> {
- public:
-  using asw::scene::Scene<States>::Scene;
+public:
+    using asw::scene::Scene<States>::Scene;
 
-  void init() override;
+    void init() override;
 
-  void update(float _deltaTime) override {
-    sceneManager.registerScene<Menu>(States::Menu, sceneManager);
-    sceneManager.registerScene<Game>(States::Game, sceneManager);
+    void update(float _dt) override
+    {
+        manager.register_scene<Menu>(States::Menu, manager);
+        manager.register_scene<Game>(States::Game, manager);
+        manager.register_scene<PostGame>(States::PostGame, manager);
 
-    // Goto menu
-    sceneManager.setNextScene(States::Menu);
-  }
+        // Goto menu
+        manager.set_next_scene(States::Menu);
+    }
 };

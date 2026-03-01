@@ -5,8 +5,8 @@
  **/
 #pragma once
 
-#include <asw/asw.h>
 #include <array>
+#include <asw/asw.h>
 #include <memory>
 #include <vector>
 
@@ -19,39 +19,39 @@
 #include "./State.hpp"
 
 class Game : public asw::scene::Scene<States> {
- public:
-  using asw::scene::Scene<States>::Scene;
+public:
+    using asw::scene::Scene<States>::Scene;
 
-  void init() override;
+    void init() override;
 
-  void update(float deltaTime) override;
+    void update(float dt) override;
 
-  void draw() override;
+    void draw() override;
 
-  // Map stuff
-  static unsigned char map_width;
-  static unsigned char map_height;
+    // Map stuff
+    static unsigned char map_width;
+    static unsigned char map_height;
 
-  static unsigned char num_enemies;
-  static unsigned char num_friends;
+    static unsigned char num_enemies;
+    static unsigned char num_friends;
 
- private:
-  void generateMap();
+private:
+    void generateMap();
 
-  // Images
-  asw::Texture map_buffer;
-  asw::Texture decal_buffer;
-  asw::Texture light_buffer;
-  asw::Texture fade_buffer;
-  asw::Texture background;
-  asw::Texture cursor;
+    // Images
+    asw::Texture map_buffer;
+    asw::Texture decal_buffer;
+    asw::Texture light_buffer;
+    asw::Texture fade_buffer;
+    asw::Texture background;
+    asw::Texture cursor;
 
-  // Fonts
-  asw::Font font;
+    // Fonts
+    asw::Font font;
 
-  asw::Vec2<float> map_position;
+    asw::Vec2<float> map_position;
 
-  int currentRound = 0;
+    int currentRound = 0;
 
-  float timer = 0.0f;
+    float timer = 0.0F;
 };

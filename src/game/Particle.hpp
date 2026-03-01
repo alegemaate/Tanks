@@ -5,50 +5,42 @@
 #include "../state/State.hpp"
 
 enum class ParticleType {
-  CIRCLE,
-  SQUARE,
-  PIXEL,
-  RANDOM,
+    CIRCLE,
+    SQUARE,
+    PIXEL,
+    RANDOM,
 };
 
 enum class ParticleBehaviour {
-  EXPLODE,
-  FIRE,
+    EXPLODE,
+    FIRE,
 };
 
 class Particle : public asw::game::GameObject {
- public:
-  Particle(asw::scene::Scene<States>* scene,
-           const asw::Vec2<float>& position,
-           asw::Color color,
-           float xVelocityMin,
-           float xVelocityMax,
-           float yVelocityMin,
-           float yVelocityMax,
-           int size,
-           ParticleType type,
-           int life,
-           ParticleBehaviour behavior);
+public:
+    Particle(asw::scene::Scene<States>* scene, const asw::Vec2<float>& position, asw::Color color,
+        float xVelocityMin, float xVelocityMax, float yVelocityMin, float yVelocityMax, int size,
+        ParticleType type, int life, ParticleBehaviour behavior);
 
-  void update(float deltaTime) override;
+    void update(float dt) override;
 
-  void draw() override;
+    void draw() override;
 
-  void drawLight() {
-    asw::draw::stretchSprite(light_buffer,
-                             transform + asw::Quad<float>(-1, -1, 2, 2));
-  }
+    void drawLight()
+    {
+        asw::draw::stretch_sprite(light_buffer, transform + asw::Quad<float>(-1, -1, 2, 2));
+    }
 
- private:
-  asw::scene::Scene<States>* scene;
+private:
+    asw::scene::Scene<States>* scene;
 
-  asw::Color color;
+    asw::Color color;
 
-  asw::Vec2<float> velocity;
+    asw::Vec2<float> velocity;
 
-  ParticleType type;
-  int life;
-  ParticleBehaviour behaviour;
+    ParticleType type;
+    int life;
+    ParticleBehaviour behaviour;
 
-  asw::Texture light_buffer;
+    asw::Texture light_buffer;
 };

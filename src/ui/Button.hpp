@@ -4,22 +4,22 @@
 #include <string>
 
 class Button : public asw::game::GameObject {
- public:
-  // Constructor
-  Button(float x, float y, const std::string& text, const asw::Font& font);
+public:
+    // Constructor
+    Button(float x, float y, const std::string& text, const asw::Font& font);
 
-  bool clicked() const;
+    bool clicked() const;
 
-  void update(float deltaTime) override;
+    void update(float dt) override;
 
-  // Draw
-  void draw() override;
+    // Draw
+    void draw() override;
 
- private:
-  bool hovering = false;
+private:
+    bool hovering = false;
 
-  std::string text;
+    std::string text;
 
-  // Font
-  asw::Font button_font = nullptr;
+    // Font
+    asw::Font button_font = nullptr;
 };

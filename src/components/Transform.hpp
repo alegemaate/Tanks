@@ -1,20 +1,15 @@
-#ifndef SRC_COMPONENTS_TRANSFORM_HPP_
-#define SRC_COMPONENTS_TRANSFORM_HPP_
+#pragma once
 
 class Transform final {
- public:
-  Transform(const double x, const double y) noexcept;
+public:
+    Transform(double x, double y) noexcept;
 
-  Transform(Transform&&) noexcept;
+    Transform(Transform&& p) noexcept;
 
-  ~Transform() noexcept = default;
+    ~Transform() noexcept = default;
 
-  Transform& operator=(Transform&&) noexcept;
+    Transform& operator=(Transform&& p) noexcept;
 
- public:
-  double x;
-
-  double y;
+    double x;
+    double y;
 };
-
-#endif  // SRC_COMPONENTS_TRANSFORM_HPP_

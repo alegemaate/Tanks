@@ -5,78 +5,76 @@
 #include "../system/ImageRegistry.hpp"
 
 // Init
-PlayerTank::PlayerTank(asw::scene::Scene<States>* scene,
-                       const asw::Vec2<float>& position,
-                       int health,
-                       int fireSpeed,
-                       int fireDelay,
-                       float speed)
-    : Tank(scene, position, health, fireSpeed, fireDelay, speed, 0) {
-  image_treads = ImageRegistry::getImage("tank-treads");
-  image_hurt = ImageRegistry::getImage("tank-dead");
-  image_top = ImageRegistry::getImage("tank-turret-green");
-  image_base = ImageRegistry::getImage("tank-base-green");
+PlayerTank::PlayerTank(asw::scene::Scene<States>* scene, const asw::Vec2<float>& position,
+    int health, int fireSpeed, int fireDelay, float speed)
+    : Tank(scene, position, health, fireSpeed, fireDelay, speed, 0)
+{
+    image_treads = ImageRegistry::getImage("tank-treads");
+    image_hurt = ImageRegistry::getImage("tank-dead");
+    image_top = ImageRegistry::getImage("tank-turret-green");
+    image_base = ImageRegistry::getImage("tank-base-green");
 
-  transform.size = asw::util::getTextureSize(image_base);
+    transform.size = asw::util::get_texture_size(image_base);
 }
 
 // Update
-void PlayerTank::update(float deltaTime) {
-  using namespace asw::input;
+void PlayerTank::update(float dt)
+{
+    using namespace asw::input;
 
-  Tank::update(deltaTime);
+    Tank::update(dt);
 
-  // Screen size
-  auto screenSize = asw::display::getSize();
+    // Screen size
+    auto screenSize = asw::display::get_size();
 
-  // Shoot
-  rotation_turret = asw::Vec2<float>(static_cast<float>(screenSize.x) / 2.0F,
-                                     static_cast<float>(screenSize.y) / 2.0F)
-                        .angle(asw::Vec2<float>(mouse.x, mouse.y));
+    // Shoot
+    rotation_turret = asw::Vec2<float>(
+        static_cast<float>(screenSize.x) / 2.0F, static_cast<float>(screenSize.y) / 2.0F)
+                          .angle(mouse.position);
 
-  if (getControllerAxis(0, ControllerAxis::RIGHT_X) != 0 ||
-      getControllerAxis(0, ControllerAxis::RIGHT_Y) != 0) {
-    // rotation_turret = find_angle(
-    //     getCenterX() - 2.0F, getCenterY() - 2.0F,
-    //     getControllerAxis(0, ControllerAxis::RIGHT_X) + (getCenterX()
-    //     - 2.0F), getControllerAxis(0, ControllerAxis::RIGHT_Y) +
-    //     (getCenterY() - 2.0F));
-  }
+    if (get_controller_axis(0, ControllerAxis::RightX) != 0
+        || get_controller_axis(0, ControllerAxis::RightY) != 0) {
+        // rotation_turret = find_angle(
+        //     getCenterX() - 2.0F, getCenterY() - 2.0F,
+        //     get_controller_axis(0, ControllerAxis::RightX) + (getCenterX()
+        //     - 2.0F), get_controller_axis(0, ControllerAxis::RightY) +
+        //     (getCenterY() - 2.0F));
+    }
 
-  if (isKeyDown(Key::SPACE) || isButtonDown(MouseButton::LEFT) ||
-      getControllerAxis(0, ControllerAxis::RIGHT_TRIGGER) != 0) {
-    shoot(rotation_turret, transform.getCenter());
-  }
+    if (get_key(Key::Space) || get_mouse_button(MouseButton::Left)
+        || get_controller_axis(0, ControllerAxis::RightTrigger) != 0) {
+        shoot(rotation_turret, transform.get_center());
+    }
 
-  // Rotate with keys
-  if (isKeyDown(Key::A) || isKeyDown(Key::LEFT)) {
-    rotation_body -= 0.03F * (deltaTime / 8.0F);
-  }
+    // Rotate with keys
+    if (get_key(Key::A) || get_key(Key::Left)) {
+        rotation_body -= 0.03F * dt * 125.0F;
+    }
 
-  if (isKeyDown(Key::D) || isKeyDown(Key::RIGHT)) {
-    rotation_body += 0.03F * (deltaTime / 8.0F);
-  }
+    if (get_key(Key::D) || get_key(Key::Right)) {
+        rotation_body += 0.03F * dt * 125.0F;
+    }
 
-  // Drive
-  if (isButtonDown(MouseButton::RIGHT)) {
-    rotation_body = rotation_turret;
-  }
+    // Drive
+    if (get_mouse_button(MouseButton::Right)) {
+        rotation_body = rotation_turret;
+    }
 
-  if (getControllerAxis(0, ControllerAxis::LEFT_X) != 0 ||
-      getControllerAxis(0, ControllerAxis::LEFT_Y) != 0) {
-    // rotation_body =
-    //     find_angle(getCenterX(), getCenterY(),
-    //                getControllerAxis(0, ControllerAxis::LEFT_X) +
-    //                getCenterX(), getControllerAxis(0, ControllerAxis::LEFT_Y)
-    //                + getCenterY());
-  }
+    if (get_controller_axis(0, ControllerAxis::LeftX) != 0
+        || get_controller_axis(0, ControllerAxis::LeftY) != 0) {
+        // rotation_body =
+        //     find_angle(getCenterX(), getCenterY(),
+        //                get_controller_axis(0, ControllerAxis::LeftX) +
+        //                getCenterX(), get_controller_axis(0, ControllerAxis::LeftY)
+        //                + getCenterY());
+    }
 
-  drive(rotation_body, deltaTime);
+    drive(rotation_body, dt);
 
-  auto moving = isButtonDown(MouseButton::RIGHT) ||
-                getControllerAxis(0, ControllerAxis::LEFT_X) != 0 ||
-                getControllerAxis(0, ControllerAxis::LEFT_Y) != 0 ||
-                isKeyDown(Key::W) || isKeyDown(Key::UP);
+    auto moving = get_mouse_button(MouseButton::Right)
+        || get_controller_axis(0, ControllerAxis::LeftX) != 0
+        || get_controller_axis(0, ControllerAxis::LeftY) != 0 || get_key(Key::W)
+        || get_key(Key::Up);
 
-  accelerate(moving, deltaTime);
+    accelerate(moving, dt);
 }

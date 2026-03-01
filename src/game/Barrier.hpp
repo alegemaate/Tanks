@@ -1,5 +1,4 @@
-#ifndef SRC_GAME_BARRIER_H_
-#define SRC_GAME_BARRIER_H_
+#pragma once
 
 #include <asw/asw.h>
 #include <vector>
@@ -7,41 +6,41 @@
 #include "../state/State.hpp"
 
 enum class BarrierType {
-  NONE,
-  BOX,
-  STONE,
+    NONE,
+    BOX,
+    STONE,
 };
 
 class Barrier : public asw::game::GameObject {
- public:
-  Barrier(asw::scene::Scene<States>* scene,
-          const asw::Vec2<float>& position,
-          BarrierType type);
+public:
+    Barrier(asw::scene::Scene<States>* scene, const asw::Vec2<float>& position, BarrierType type);
 
-  void update(float deltaTime) override;
-  void draw() override;
+    void update(float dt) override;
+    void draw() override;
 
-  float getWidth() const;
-  float getHeight() const;
+    float getWidth() const;
+    float getHeight() const;
 
-  void hit() {
-    if (indestructible) {
-      return;
+    void hit()
+    {
+        if (indestructible) {
+            return;
+        }
+        health--;
     }
-    health--;
-  }
 
-  void makeIndestructible(bool i) { this->indestructible = i; }
+    void makeIndestructible(bool i)
+    {
+        this->indestructible = i;
+    }
 
-  asw::Vec2<float> getPosition() const;
+    asw::Vec2<float> getPosition() const;
 
- private:
-  asw::scene::Scene<States>* scene;
-  int health;
-  bool indestructible = false;
-  asw::Texture image;
+private:
+    asw::scene::Scene<States>* scene;
+    int health;
+    bool indestructible = false;
+    asw::Texture image;
 
-  void explode();
+    void explode();
 };
-
-#endif  // SRC_GAME_BARRIER_H_

@@ -11,7 +11,8 @@
 
 // Game states
 enum class States {
-  Init,
-  Menu,
-  Game,
+    Init,
+    Menu,
+    Game,
+    PostGame,
 };
