@@ -24,7 +24,7 @@ class Game : public asw::scene::Scene<States> {
 
   void init() override;
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
 
   void draw() override;
 
@@ -49,7 +49,7 @@ class Game : public asw::scene::Scene<States> {
   // Fonts
   asw::Font font;
 
-  asw::Vec2<float> map_position;
+  asw::Camera camera;
 
   int currentRound = 0;
 

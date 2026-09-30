@@ -12,16 +12,17 @@
 class Tank : public asw::game::GameObject {
  public:
   explicit Tank(asw::scene::Scene<States>* scene,
+                asw::Camera& camera,
                 const asw::Vec2<float>& position,
                 int health,
-                int fireSpeed,
-                int fireDelay,
+                float fireSpeed,
+                float fireDelay,
                 float speed,
                 int team);
 
   virtual ~Tank() = default;
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
   void draw() override;
   virtual void putDecal();
 
@@ -39,9 +40,14 @@ class Tank : public asw::game::GameObject {
  protected:
   int health;
   int initialHealth;
-  int fire_speed;
-  int fire_delay_rate;
 
+  // Bullet speed in pixels per second
+  float fire_speed;
+
+  // Seconds between shots
+  float fire_delay_rate;
+
+  // Pixels per second
   float max_speed;
   float speed = 0;
 
@@ -51,11 +57,12 @@ class Tank : public asw::game::GameObject {
   asw::Texture image_treads;
 
   asw::scene::Scene<States>* scene;
+  asw::Camera& camera;
 
   float rotation_body = 0;
   float rotation_turret = 0;
 
-  int bullet_delay = 0;
+  float bullet_delay = 0;
 
   int map_width;
   int map_height;
@@ -66,13 +73,13 @@ class Tank : public asw::game::GameObject {
   int team;
 
   // Update
-  void drive(float rotation, float deltaTime);
+  void drive(float rotation, float dt);
   void shoot(float rotation, const asw::Vec2<float>& target);
-  void accelerate(bool moving, float deltaTime);
+  void accelerate(bool moving, float dt);
 
  private:
-  virtual void collideBullets(float deltaTime);
-  virtual void collideBarriers(float deltaTime);
+  virtual void collideBullets(float dt);
+  virtual void collideBarriers(float dt);
   virtual void collidePowerUps();
 
   // Update

@@ -23,18 +23,14 @@ class Bullet : public asw::game::GameObject {
          int health,
          int team);
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
   void draw() override;
   void destroy();
-
-  float getXVelocity() const { return velocity.x; }
-
-  float getYVelocity() const { return velocity.y; }
 
   int getTeam() const { return team; }
 
   void drawLight() {
-    asw::draw::stretchSprite(light_buffer,
+    asw::draw::stretch_sprite(light_buffer,
                              transform + asw::Quad<float>(-4, -4, 8, 8));
   }
 
@@ -43,7 +39,6 @@ class Bullet : public asw::game::GameObject {
   void reverseDirection(const std::string& direction);
 
   asw::scene::Scene<States>* scene;
-  asw::Vec2<float> velocity;
 
   asw::Texture light_buffer;
 

@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "../system/ImageRegistry.hpp"
-#include "../system/SampleRegistry.hpp"
 #include "./Particle.hpp"
 #include "./PowerUp.hpp"
 
@@ -15,22 +13,22 @@ Barrier::Barrier(asw::scene::Scene<States>* scene,
 
   switch (type) {
     case BarrierType::BOX:
-      image = ImageRegistry::getImage("block-box");
+      image = asw::assets::get_texture("block-box");
       health = 3;
       break;
     default:
-      image = ImageRegistry::getImage("block-stone");
+      image = asw::assets::get_texture("block-stone");
       health = 20;
       break;
   }
 
-  transform.size = asw::util::getTextureSize(image);
+  transform.size = asw::util::get_texture_size(image);
 
-  zIndex = 10;
+  z_index = 10;
 }
 
 // Update
-void Barrier::update(float deltaTime) {
+void Barrier::update(float /*dt*/) {
   if (health <= 0) {
     explode();
   }
@@ -62,16 +60,16 @@ void Barrier::explode() {
   alive = false;
 
   // Explode
-  asw::sound::play(SampleRegistry::getSample("explode"), 255, 127, 0);
+  const auto center = transform.get_center();
+  asw::sound::play_positional(asw::assets::get_sample("explode"), center);
 
   for (int i = 0; i < 100; i++) {
-    const asw::Color color =
-        asw::util::makeColor(255, asw::random::between(0, 255), 0);
+    const asw::Color color(255, asw::random::between(0, 255), 0);
 
     // Make particle
-    scene->createObject<Particle>(scene, transform.getCenter(), color, -6.0,
-                                  6.0, -6.0, 6.0, 2, ParticleType::SQUARE, 30,
-                                  ParticleBehaviour::EXPLODE);
+    scene->create_object<Particle>(scene, center, color, -750.0F, 750.0F,
+                                   -750.0F, 750.0F, 2, ParticleType::SQUARE,
+                                   0.25F, ParticleBehaviour::EXPLODE);
   }
 
   // Remove broken barriers
@@ -94,7 +92,7 @@ void Barrier::explode() {
         break;
     }
 
-    scene->createObject<PowerUp>(transform.position.x, transform.position.y,
-                                 type);
+    scene->create_object<PowerUp>(transform.position.x, transform.position.y,
+                                  type);
   }
 }

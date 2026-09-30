@@ -5,7 +5,9 @@
  **/
 #pragma once
 
-#include "../ui/Button.hpp"
+#include <asw/asw.h>
+#include <functional>
+
 #include "Game.hpp"
 #include "State.hpp"
 
@@ -14,21 +16,13 @@ class Menu : public asw::scene::Scene<States> {
   using asw::scene::Scene<States>::Scene;
 
   void init() override;
-  void update(float deltaTime) override;
+  void update(float dt) override;
   void draw() override;
 
  private:
-  std::shared_ptr<Button> enemies_up;
-  std::shared_ptr<Button> enemies_down;
-  std::shared_ptr<Button> friends_up;
-  std::shared_ptr<Button> friends_down;
-  std::shared_ptr<Button> width_up;
-  std::shared_ptr<Button> width_down;
-  std::shared_ptr<Button> height_up;
-  std::shared_ptr<Button> height_down;
-  std::shared_ptr<Button> bounce_up;
-  std::shared_ptr<Button> bounce_down;
-  std::shared_ptr<Button> start;
+  asw::ui::Button& addButton(float x, float y, const std::string& text);
+  void addStepper(float x, const std::function<void(int)>& change);
 
+  asw::ui::Root ui;
   asw::Font font;
 };

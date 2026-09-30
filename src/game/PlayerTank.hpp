@@ -6,13 +6,14 @@
 class PlayerTank : public Tank {
  public:
   PlayerTank(asw::scene::Scene<States>* scene,
+             asw::Camera& camera,
              const asw::Vec2<float>& position,
              int health,
-             int fireSpeed,
-             int fireDelay,
+             float fireSpeed,
+             float fireDelay,
              float speed);
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
 };
 
 #endif  // SRC_GAME_PLAYER_TANK_H_
