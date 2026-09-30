@@ -9,14 +9,7 @@ AiTank::AiTank(asw::scene::Scene<States>* scene,
                float fireDelay,
                float speed,
                int team)
-    : Tank(scene,
-           camera,
-           position,
-           health,
-           fireSpeed,
-           fireDelay,
-           speed,
-           team) {
+    : Tank(scene, camera, position, health, fireSpeed, fireDelay, speed, team) {
   if (team == 1) {
     this->image_treads = asw::assets::get_texture("tank-treads");
     this->image_hurt = asw::assets::get_texture("tank-dead");
@@ -36,6 +29,11 @@ AiTank::AiTank(asw::scene::Scene<States>* scene,
 // Update
 void AiTank::update(float dt) {
   Tank::update(dt);
+
+  if (dead) {
+    return;
+  }
+
   find_enemy_target();
   update_target(dt);
   ai_drive(dt);
@@ -48,16 +46,16 @@ void AiTank::find_enemy_target() {
   const auto centre_tank = transform.get_center();
 
   for (const auto& tank : scene->get_object_view<Tank>()) {
-    if (tank->getTeam() == team) {
+    if (tank->getTeam() == team || tank->isDead()) {
       continue;
     }
 
-    found_enemy = true;
     const auto centre_enemy = tank->transform.get_center();
 
     if (!found_enemy ||
         centre_tank.distance(centre_enemy) < centre_tank.distance(closest)) {
       closest = centre_enemy;
+      found_enemy = true;
     }
   }
 
@@ -82,7 +80,8 @@ void AiTank::update_target(float dt) {
   const bool cantMove = !canMoveX && !canMoveY;
   const float deltaDistance = std::abs(last_distance - distanceToTarget);
 
-  if (distanceToTarget < 10.0f || cantMove || deltaDistance < speed * dt / 2.0F) {
+  if (distanceToTarget < 10.0f || cantMove ||
+      deltaDistance < speed * dt / 2.0F) {
     destination.x = static_cast<float>(asw::random::between(0, map_width));
     destination.y = static_cast<float>(asw::random::between(0, map_height));
     last_distance = 0.0f;

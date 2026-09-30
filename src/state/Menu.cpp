@@ -1,6 +1,16 @@
 #include "Menu.hpp"
 
+#include <algorithm>
+
 constexpr float BUTTON_PADDING = 10.0F;
+
+namespace {
+// Step a map size, without going below the smallest map or wrapping
+void stepMapSize(unsigned char& size, int step) {
+  size = static_cast<unsigned char>(
+      std::clamp(size + step, static_cast<int>(Game::MIN_MAP_SIZE), 255));
+}
+}  // namespace
 
 // Initializer
 void Menu::init() {
@@ -26,8 +36,8 @@ void Menu::init() {
   // Make teams
   addStepper(90, [](int step) { Game::num_friends += step; });
   addStepper(210, [](int step) { Game::num_enemies += step; });
-  addStepper(330, [](int step) { Game::map_width += step; });
-  addStepper(450, [](int step) { Game::map_height += step; });
+  addStepper(330, [](int step) { stepMapSize(Game::map_width, step); });
+  addStepper(450, [](int step) { stepMapSize(Game::map_height, step); });
   addStepper(570, [](int step) { Tank::num_bullet_bounces += step; });
 
   // Start game

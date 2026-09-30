@@ -21,7 +21,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 asw_add_web_target(${PROJECT_NAME}
   TITLE "Tanks!"
+  BACKGROUND "#000000"
   ASSETS ${CMAKE_CURRENT_LIST_DIR}/assets
 )
+
+if(EMSCRIPTEN)
+  target_link_options(${PROJECT_NAME} PRIVATE
+    -sMAXIMUM_MEMORY=1gb
+    --use-preload-plugins
+  )
+endif()
 
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/assets/)

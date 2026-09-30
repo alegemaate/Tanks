@@ -31,12 +31,11 @@ class Bullet : public asw::game::GameObject {
 
   void drawLight() {
     asw::draw::stretch_sprite(light_buffer,
-                             transform + asw::Quad<float>(-4, -4, 8, 8));
+                              transform + asw::Quad<float>(-4, -4, 8, 8));
   }
 
  private:
-  void bounce(BounceDirection direction);
-  void reverseDirection(const std::string& direction);
+  bool hitBarriers();
 
   asw::scene::Scene<States>* scene;
 

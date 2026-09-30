@@ -28,6 +28,9 @@ class Tank : public asw::game::GameObject {
 
   int getTeam() const { return team; }
 
+  // Destroyed tanks stay on the map as wrecks
+  bool isDead() const { return dead; }
+
   virtual void set_map_dimensions(int mWidth, int mHeight) {
     map_width = mWidth;
     map_height = mHeight;
@@ -66,6 +69,8 @@ class Tank : public asw::game::GameObject {
 
   int map_width;
   int map_height;
+
+  bool dead = false;
 
   bool canMoveX = true;
   bool canMoveY = true;

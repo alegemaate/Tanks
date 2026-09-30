@@ -22,21 +22,18 @@ Bullet::Bullet(asw::scene::Scene<States>* scene,
   light_buffer = asw::assets::get_texture("light");
 }
 
-// Reverse specified vector
-void Bullet::reverseDirection(const std::string& direction) {
-  if (direction == "x") {
-    body.velocity.x = -body.velocity.x;
-  } else if (direction == "y") {
-    body.velocity.y = -body.velocity.y;
-  } else {
-    body.velocity *= -1.0F;
-  }
-}
+// Damage every barrier the bullet overlaps, true if there were any
+bool Bullet::hitBarriers() {
+  bool hit = false;
 
-// Bounce off wall
-void Bullet::bounce(BounceDirection direction) {
-  health--;
-  incidenceDirection = direction;
+  for (auto& obj : scene->get_object_view<Barrier>()) {
+    if (obj->alive && transform.collides(obj->transform)) {
+      obj->hit();
+      hit = true;
+    }
+  }
+
+  return hit;
 }
 
 // Destroy
@@ -64,20 +61,20 @@ void Bullet::destroy() {
         break;
       }
       case BounceDirection::TOP: {
-        scene->create_object<Particle>(scene, center, color, -625, 625, -375,
-                                       0, 2, ParticleType::SQUARE, 0.09F,
+        scene->create_object<Particle>(scene, center, color, -625, 625, -375, 0,
+                                       2, ParticleType::SQUARE, 0.09F,
                                        ParticleBehaviour::EXPLODE);
         break;
       }
       case BounceDirection::LEFT: {
-        scene->create_object<Particle>(scene, center, color, -375, 0, -625,
-                                       625, 2, ParticleType::SQUARE, 0.09F,
+        scene->create_object<Particle>(scene, center, color, -375, 0, -625, 625,
+                                       2, ParticleType::SQUARE, 0.09F,
                                        ParticleBehaviour::EXPLODE);
         break;
       }
       default: {
-        scene->create_object<Particle>(scene, center, color, 0, 375, -625,
-                                       625, 2, ParticleType::SQUARE, 0.09F,
+        scene->create_object<Particle>(scene, center, color, 0, 375, -625, 625,
+                                       2, ParticleType::SQUARE, 0.09F,
                                        ParticleBehaviour::EXPLODE);
         break;
       }
@@ -87,42 +84,45 @@ void Bullet::destroy() {
 
 // Update bullets
 void Bullet::update(float dt) {
-  // Destroy if out of bounds or health is 0
-  if (health <= 0 || transform.position.x < 0 || transform.position.x > 10000 ||
+  // Destroy if out of bounds
+  if (transform.position.x < 0 || transform.position.x > 10000 ||
       transform.position.y < 0 || transform.position.y > 10000) {
     destroy();
+    return;
   }
 
-  // Move
-  GameObject::update(dt);
+  // Move one axis at a time, so the axis that hits a wall is the one that
+  // bounces, also where two blocks meet
+  const auto delta = body.velocity * dt;
+  bool bounced = false;
 
-  // Bounce
-  for (auto& obj : scene->get_object_view<Barrier>()) {
-    if (transform.collides(obj->transform)) {
-      if (transform.collides_bottom(obj->transform)) {
-        reverseDirection("y");
-        bounce(BounceDirection::BOTTOM);
-      } else if (transform.collides_top(obj->transform)) {
-        reverseDirection("y");
-        bounce(BounceDirection::TOP);
-      }
+  transform.position.x += delta.x;
+  if (hitBarriers()) {
+    transform.position.x -= delta.x;
+    body.velocity.x = -body.velocity.x;
+    incidenceDirection =
+        delta.x > 0 ? BounceDirection::LEFT : BounceDirection::RIGHT;
+    bounced = true;
+  }
 
-      if (transform.collides_left(obj->transform)) {
-        reverseDirection("x");
-        bounce(BounceDirection::LEFT);
-      } else if (transform.collides_right(obj->transform)) {
-        reverseDirection("x");
-        bounce(BounceDirection::RIGHT);
-      }
+  transform.position.y += delta.y;
+  if (hitBarriers()) {
+    transform.position.y -= delta.y;
+    body.velocity.y = -body.velocity.y;
+    incidenceDirection =
+        delta.y > 0 ? BounceDirection::TOP : BounceDirection::BOTTOM;
+    bounced = true;
+  }
 
-      obj->hit();
-    }
+  // Each bounce uses up one health, a corner counts once
+  if (bounced && --health <= 0) {
+    destroy();
   }
 }
 
 // Draw image
 void Bullet::draw() {
   asw::draw::rect_fill(transform, asw::color::black);
-  const auto inner = transform + asw::Quad<float>(1, 1, -1, -1);
+  const auto inner = transform + asw::Quad<float>(1, 1, -2, -2);
   asw::draw::rect_fill(inner, asw::color::red);
 }

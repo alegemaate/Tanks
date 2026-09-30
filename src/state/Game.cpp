@@ -2,7 +2,6 @@
 
 #include <algorithm>
 
-
 unsigned char Game::map_width = 20;
 unsigned char Game::map_height = 20;
 
@@ -12,11 +11,11 @@ unsigned char Game::num_friends = 5;
 const unsigned char max_map_width = 255;
 const unsigned char max_map_height = 255;
 
+// Seconds a won or lost round stays on screen
+constexpr float ROUND_END_DELAY = 3.0F;
+
 // Init state (and Game)
 void Game::init() {
-  // Reset vars
-  currentRound = 0;
-
   const int map_pixel_width = map_width * 40;
   const int map_pixel_height = map_height * 40;
 
@@ -25,11 +24,6 @@ void Game::init() {
   map_buffer = asw::assets::create_texture(map_pixel_width, map_pixel_height);
   light_buffer = asw::assets::create_texture(map_pixel_width, map_pixel_height);
   fade_buffer = asw::assets::create_texture(map_pixel_width, map_pixel_height);
-
-  // Setup decal buffer
-  asw::display::set_render_target(decal_buffer);
-  asw::draw::clear_color(asw::Color(0, 0, 0, 0));
-  asw::display::reset_render_target();
 
   // Setup light buffer
   asw::draw::set_blend_mode(light_buffer, asw::BlendMode::Add);
@@ -53,8 +47,56 @@ void Game::init() {
   camera.set_view_size(asw::Vec2<float>(screen_size.x, screen_size.y));
   camera.set_bounds(asw::Quad<float>(0, 0, map_pixel_width, map_pixel_height));
 
-  // Create map
+  currentRound = 0;
+  startRound();
+}
+
+void Game::startRound() {
+  // Remove the last round's objects
+  Scene::cleanup();
+
+  currentRound++;
+  roundState = RoundState::Playing;
+  timer = 0.0F;
+
+  // Clear decals
+  asw::display::set_render_target(decal_buffer);
+  asw::draw::clear_color(asw::Color(0, 0, 0, 0));
+
+  // Clear lights to the dark they fade to
+  asw::display::set_render_target(light_buffer);
+  asw::draw::clear_color(asw::Color(0, 0, 0, 255));
+  asw::display::reset_render_target();
+
   generateMap();
+}
+
+void Game::updateRoundState() {
+  friendsLeft = 0;
+  enemiesLeft = 0;
+  bool playerAlive = false;
+
+  for (const auto& tank : get_object_view<Tank>()) {
+    if (tank->isDead()) {
+      continue;
+    }
+
+    if (tank->getTeam() == 0) {
+      friendsLeft++;
+    } else {
+      enemiesLeft++;
+    }
+  }
+
+  for (const auto& tank : get_object_view<PlayerTank>()) {
+    playerAlive = !tank->isDead();
+  }
+
+  if (!playerAlive) {
+    roundState = RoundState::Lost;
+  } else if (enemiesLeft == 0) {
+    roundState = RoundState::Won;
+  }
 }
 
 void Game::update(float dt) {
@@ -66,6 +108,22 @@ void Game::update(float dt) {
     manager.set_next_scene(States::Menu);
   }
 
+  // Win or lose
+  if (roundState == RoundState::Playing) {
+    updateRoundState();
+  } else {
+    timer += dt;
+
+    if (timer >= ROUND_END_DELAY) {
+      if (roundState == RoundState::Won) {
+        startRound();
+      } else {
+        manager.set_next_scene(States::Menu);
+      }
+      return;
+    }
+  }
+
   // Follow player
   for (const auto& tank : get_object_view<PlayerTank>()) {
     const auto center = tank->transform.get_center();
@@ -74,8 +132,6 @@ void Game::update(float dt) {
   }
 
   camera.update(dt);
-
-  timer += dt;
 }
 
 void Game::draw() {
@@ -121,10 +177,28 @@ void Game::draw() {
   // Text
   asw::draw::text_shadow(font, "Round: " + std::to_string(currentRound),
                          asw::Vec2<float>(20, 20), asw::color::white);
+  asw::draw::text_shadow(font, "Team BLUE: " + std::to_string(friendsLeft),
+                         asw::Vec2<float>(20, 40), asw::color::white);
+  asw::draw::text_shadow(font, "Team RED: " + std::to_string(enemiesLeft),
+                         asw::Vec2<float>(20, 60), asw::color::white);
+
+  if (roundState != RoundState::Playing) {
+    const auto screen_size = asw::display::get_logical_size();
+    const auto message =
+        roundState == RoundState::Won
+            ? "Round " + std::to_string(currentRound) + " cleared!"
+            : "Game over";
+
+    asw::draw::text_shadow(
+        font, message,
+        asw::Vec2<float>(screen_size.x / 2.0F, screen_size.y / 2.0F),
+        asw::color::white, asw::color::black, asw::Vec2<float>(2.0F, 2.0F),
+        asw::TextJustify::Center);
+  }
 
   // Cursor
-  asw::draw::sprite(cursor, asw::input::get_mouse().position -
-                                asw::Vec2<float>(10, 10));
+  asw::draw::sprite(
+      cursor, asw::input::get_mouse().position - asw::Vec2<float>(10, 10));
 }
 
 void Game::generateMap() {
@@ -132,16 +206,24 @@ void Game::generateMap() {
   std::array<std::array<BarrierType, max_map_height>, max_map_width> map_temp{};
   std::vector<asw::Vec2<float>> startLocations{};
 
-  for (unsigned char pass = 0; pass < 8; pass++) {
+  for (int pass = 0; pass < 8; pass++) {
     for (unsigned char i = 0; i < map_width; i++) {
       for (unsigned char t = 0; t < map_height; t++) {
+        const bool edge =
+            i == 0 || t == 0 || i == map_width - 1 || t == map_height - 1;
+
+        // Passes 2 to 4 read the neighbours, which edges do not all have
+        if (edge && pass >= 2 && pass <= 4) {
+          continue;
+        }
+
         // Pass 0 (Initial)
         if (pass == 0) {
           map_temp[i][t] = BarrierType::NONE;
         }
         // Pass 1 (Edges)
         else if (pass == 1) {
-          if (i == 0 || t == 0 || i == map_width - 1 || t == map_height - 1) {
+          if (edge) {
             map_temp[i][t] = BarrierType::STONE;
           }
         }
@@ -195,11 +277,16 @@ void Game::generateMap() {
           auto position = asw::Vec2<float>(i * 40, t * 40);
           auto barrier = create_object<Barrier>(this, position, map_temp[i][t]);
 
-          if (i == 0 || t == 0 || i == map_width - 1 || t == map_height - 1) {
+          if (edge) {
             barrier->makeIndestructible(true);
           }
         }
       }
+    }
+
+    // No room for the tanks, start again
+    if (pass == 6 && startLocations.empty()) {
+      pass = -1;
     }
   }
 
@@ -213,8 +300,9 @@ void Game::generateMap() {
     camera.snap_to(tank->transform.get_center());
   }
 
-  // Enemies
-  for (unsigned char i = 0; i < num_enemies; i++) {
+  // Enemies, one more each round
+  const int enemies = num_enemies + currentRound - 1;
+  for (int i = 0; i < enemies; i++) {
     const auto startLocation = startLocations.at(
         asw::random::between(0, static_cast<int>(startLocations.size()) - 1));
     auto tank = create_object<AiTank>(

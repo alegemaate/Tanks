@@ -82,7 +82,7 @@ void Tank::accelerate(bool moving, float dt) {
 // Check collision
 void Tank::collideBullets(float dt) {
   for (auto& obj : scene->get_object_view<Bullet>()) {
-    if (obj->getTeam() == team) {
+    if (!obj->alive || obj->getTeam() == team) {
       continue;
     }
 
@@ -116,7 +116,7 @@ void Tank::collideBarriers(float dt) {
 
 void Tank::collidePowerUps() {
   for (auto& obj : scene->get_object_view<PowerUp>()) {
-    if (transform.collides(obj->transform)) {
+    if (obj->alive && transform.collides(obj->transform)) {
       pickupPowerUp(obj->getType());
       obj->pickup();
     }
@@ -141,8 +141,8 @@ void Tank::shoot(float rotation, const asw::Vec2<float>& target) {
     asw::sound::play_positional(asw::assets::get_sample("fire"), target,
                                 {.pitch_variation = 0.1F});
 
-    scene->create_object<Bullet>(scene, target.x, target.y, rotation, fire_speed,
-                                1 + num_bullet_bounces, team);
+    scene->create_object<Bullet>(scene, target.x, target.y, rotation,
+                                 fire_speed, 1 + num_bullet_bounces, team);
 
     bullet_delay = 0.0F;
   }
@@ -150,15 +150,22 @@ void Tank::shoot(float rotation, const asw::Vec2<float>& target) {
 
 // Update
 void Tank::update(float dt) {
+  if (dead) {
+    return;
+  }
+
   // Collides
   collidePowerUps();
   collideBarriers(dt);
   collideBullets(dt);
 
-  // Just died
-  if (alive && (health <= 0)) {
+  // Just died, leave a wreck under the living tanks
+  if (health <= 0) {
     explode();
-    alive = false;
+    dead = true;
+    speed = 0;
+    z_index = 4;
+    return;
   }
 
   bullet_delay += dt;
@@ -166,24 +173,21 @@ void Tank::update(float dt) {
 
 // Draw Tank
 void Tank::drawTankBase() {
-  // Hurt image for player
-  if (!alive) {
-    asw::draw::rotate_sprite(image_hurt, transform.position,
-                            rotation_body);
+  // Wreck
+  if (dead) {
+    asw::draw::rotate_sprite(image_hurt, transform.position, rotation_body);
   } else {
-    asw::draw::rotate_sprite(image_base, transform.position,
-                            rotation_body);
+    asw::draw::rotate_sprite(image_base, transform.position, rotation_body);
   }
 }
 
 // Draw turret
 void Tank::drawTankTurret() {
-  if (!alive) {
+  if (dead) {
     return;
   }
 
-  asw::draw::rotate_sprite(image_top, transform.position,
-                          rotation_turret);
+  asw::draw::rotate_sprite(image_top, transform.position, rotation_turret);
 }
 
 // Draw health
@@ -192,21 +196,22 @@ void Tank::drawHealthBar(float x,
                          int width,
                          int height,
                          int border) const {
-  if (health >= initialHealth || !alive) {
+  if (health >= initialHealth || dead) {
     return;
   }
 
   const float healthPercent =
-      static_cast<float>(health) / static_cast<float>(initialHealth);
+      std::clamp(static_cast<float>(health) / static_cast<float>(initialHealth),
+                 0.0F, 1.0F);
+  const auto inner = asw::Quad<float>(
+      x + border, y + border, width - (border * 2), height - (border * 2));
 
   asw::draw::rect_fill(asw::Quad<float>(x, y, width, height),
-                      asw::color::black);
+                       asw::color::black);
+  asw::draw::rect_fill(inner, asw::color::red);
   asw::draw::rect_fill(
-      asw::Quad<float>(x + border, y + border, width - border, height - border),
-      asw::color::red);
-  asw::draw::rect_fill(
-      asw::Quad<float>(x + border, y + border, (healthPercent * width) - border,
-                       height - border),
+      asw::Quad<float>(inner.position.x, inner.position.y,
+                       inner.size.x * healthPercent, inner.size.y),
       asw::color::lime);
 }
 
@@ -224,11 +229,12 @@ void Tank::draw() {
 
 // Put decals
 void Tank::putDecal() {
-  if (alive && speed > 0) {
-    asw::draw::rotate_sprite(
-        image_treads,
-        asw::Vec2<float>(transform.get_center().x, transform.position.y),
-        rotation_turret);
+  if (!dead && speed > 0) {
+    // Tread strip across the hull, centred on the tank
+    const auto center = transform.get_center();
+    const auto size = asw::util::get_texture_size(image_treads);
+    asw::draw::rotate_sprite(image_treads, center - (size / 2.0F),
+                             rotation_body);
   }
 }
 
@@ -236,10 +242,7 @@ void Tank::putDecal() {
 void Tank::pickupPowerUp(PowerUpType type) {
   switch (type) {
     case PowerUpType::HEALTH:
-      health += 25;
-      if (health > 100) {
-        health = 100;
-      }
+      health = std::min(health + 25, initialHealth);
       break;
     case PowerUpType::SPEED:
       max_speed += 31.25F;

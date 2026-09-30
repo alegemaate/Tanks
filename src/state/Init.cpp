@@ -28,8 +28,7 @@ void Init::init() {
                             "tank-base-green");
   asw::assets::load_texture("assets/images/tank_turret_red.png",
                             "tank-turret-red");
-  asw::assets::load_texture("assets/images/tank_base_red.png",
-                            "tank-base-red");
+  asw::assets::load_texture("assets/images/tank_base_red.png", "tank-base-red");
   asw::assets::load_texture("assets/images/tank_turret_blue.png",
                             "tank-turret-blue");
   asw::assets::load_texture("assets/images/tank_base_blue.png",
@@ -40,7 +39,7 @@ void Init::init() {
   asw::assets::load_sample("assets/sfx/fire.wav", "fire");
   asw::assets::load_sample("assets/sfx/tank_explode.wav", "tank-explode");
 
-  asw::assets::load_font("assets/fonts/ariblk.ttf", 12, "main");
+  asw::assets::load_font("assets/fonts/PressStart2P-Regular.ttf", 12, "main");
 
   // Player controls
   using namespace asw::input;
@@ -56,8 +55,8 @@ void Init::init() {
   bind_action("turn_right", KeyBinding{Key::D});
   bind_action("turn_right", KeyBinding{Key::Right});
   bind_action("menu", KeyBinding{Key::M});
-  bind_action("menu", ControllerButtonBinding{ControllerButton::Back,
-                                              ANY_CONTROLLER});
+  bind_action("menu",
+              ControllerButtonBinding{ControllerButton::Back, ANY_CONTROLLER});
 
   asw::log::info("Loaded assets");
 }

@@ -36,7 +36,7 @@ class Particle : public asw::game::GameObject {
 
   void drawLight() {
     asw::draw::stretch_sprite(light_buffer,
-                             transform + asw::Quad<float>(-1, -1, 2, 2));
+                              transform + asw::Quad<float>(-1, -1, 2, 2));
   }
 
  private:

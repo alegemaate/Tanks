@@ -11,14 +11,7 @@ PlayerTank::PlayerTank(asw::scene::Scene<States>* scene,
                        float fireSpeed,
                        float fireDelay,
                        float speed)
-    : Tank(scene,
-           camera,
-           position,
-           health,
-           fireSpeed,
-           fireDelay,
-           speed,
-           0) {
+    : Tank(scene, camera, position, health, fireSpeed, fireDelay, speed, 0) {
   image_treads = asw::assets::get_texture("tank-treads");
   image_hurt = asw::assets::get_texture("tank-dead");
   image_top = asw::assets::get_texture("tank-turret-green");
@@ -32,6 +25,10 @@ void PlayerTank::update(float dt) {
   using namespace asw::input;
 
   Tank::update(dt);
+
+  if (dead) {
+    return;
+  }
 
   const auto center = transform.get_center();
 

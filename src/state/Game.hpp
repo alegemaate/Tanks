@@ -29,6 +29,7 @@ class Game : public asw::scene::Scene<States> {
   void draw() override;
 
   // Map stuff
+  static constexpr unsigned char MIN_MAP_SIZE = 5;
   static unsigned char map_width;
   static unsigned char map_height;
 
@@ -36,7 +37,11 @@ class Game : public asw::scene::Scene<States> {
   static unsigned char num_friends;
 
  private:
+  enum class RoundState { Playing, Won, Lost };
+
+  void startRound();
   void generateMap();
+  void updateRoundState();
 
   // Images
   asw::Texture map_buffer;
@@ -53,5 +58,11 @@ class Game : public asw::scene::Scene<States> {
 
   int currentRound = 0;
 
+  RoundState roundState = RoundState::Playing;
+
+  // Seconds since the round was won or lost
   float timer = 0.0f;
+
+  int friendsLeft = 0;
+  int enemiesLeft = 0;
 };
