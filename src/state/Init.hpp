@@ -17,11 +17,11 @@ class Init : public asw::scene::Scene<States> {
 
   void init() override;
 
-  void update(float _deltaTime) override {
-    sceneManager.registerScene<Menu>(States::Menu, sceneManager);
-    sceneManager.registerScene<Game>(States::Game, sceneManager);
+  void update(float /*dt*/) override {
+    manager.register_scene<Menu>(States::Menu, manager);
+    manager.register_scene<Game>(States::Game, manager);
 
     // Goto menu
-    sceneManager.setNextScene(States::Menu);
+    manager.set_next_scene(States::Menu);
   }
 };

@@ -10,8 +10,8 @@ int main() {
   asw::core::init(800, 600);
 
   auto app = asw::scene::SceneManager<States>();
-  app.registerScene<Init>(States::Init, app);
-  app.setNextScene(States::Init);
+  app.register_scene<Init>(States::Init, app);
+  app.set_next_scene(States::Init);
   app.start();
 
   return 0;

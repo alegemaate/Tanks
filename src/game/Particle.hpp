@@ -27,16 +27,16 @@ class Particle : public asw::game::GameObject {
            float yVelocityMax,
            int size,
            ParticleType type,
-           int life,
+           float life,
            ParticleBehaviour behavior);
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
 
   void draw() override;
 
   void drawLight() {
-    asw::draw::stretchSprite(light_buffer,
-                             transform + asw::Quad<float>(-1, -1, 2, 2));
+    asw::draw::stretch_sprite(light_buffer,
+                              transform + asw::Quad<float>(-1, -1, 2, 2));
   }
 
  private:
@@ -44,10 +44,10 @@ class Particle : public asw::game::GameObject {
 
   asw::Color color;
 
-  asw::Vec2<float> velocity;
-
   ParticleType type;
-  int life;
+
+  // Average lifetime in seconds
+  float life;
   ParticleBehaviour behaviour;
 
   asw::Texture light_buffer;

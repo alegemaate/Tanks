@@ -17,7 +17,7 @@ class Barrier : public asw::game::GameObject {
           const asw::Vec2<float>& position,
           BarrierType type);
 
-  void update(float deltaTime) override;
+  void update(float dt) override;
   void draw() override;
 
   float getWidth() const;

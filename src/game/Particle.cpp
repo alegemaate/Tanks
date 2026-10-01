@@ -1,7 +1,15 @@
 #include "Particle.hpp"
 
-#include "../system/ImageRegistry.hpp"
+#include <cmath>
+
 #include "./Barrier.hpp"
+
+// Velocity lost per second
+constexpr float EXPLODE_DRAG = 13.2F;
+constexpr float FIRE_DRAG = 6.4F;
+
+// Slowest a particle may start (px/s)
+constexpr float MIN_SPEED = 12.5F;
 
 // Constructor
 Particle::Particle(asw::scene::Scene<States>* scene,
@@ -13,52 +21,49 @@ Particle::Particle(asw::scene::Scene<States>* scene,
                    float yVelocityMax,
                    int size,
                    ParticleType type,
-                   int life,
+                   float life,
                    ParticleBehaviour behaviour)
     : scene(scene), color(color), type(type), life(life), behaviour(behaviour) {
   transform = asw::Quad<float>(position.x, position.y, size, size);
-  velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
-  velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
-  light_buffer = ImageRegistry::getImage("light");
+  body.velocity.x = asw::random::between(xVelocityMin, xVelocityMax);
+  body.velocity.y = asw::random::between(yVelocityMin, yVelocityMax);
+  light_buffer = asw::assets::get_texture("light");
 
   // No unmoving
-  if (velocity.x < 0.1F && velocity.x > -0.1F) {
-    velocity.x = 0.1F;
+  if (std::abs(body.velocity.x) < MIN_SPEED) {
+    body.velocity.x = MIN_SPEED;
   }
 
-  if (velocity.y < 0.1F && velocity.y > -0.1F) {
-    velocity.y = 0.1F;
+  if (std::abs(body.velocity.y) < MIN_SPEED) {
+    body.velocity.y = MIN_SPEED;
   }
 
   if (behaviour == ParticleBehaviour::EXPLODE) {
-    zIndex = asw::random::between(0, 9);
+    z_index = asw::random::between(0, 9);
   } else {
-    zIndex = 0;
+    z_index = 0;
   }
 }
 
 // Logic
-void Particle::update(float deltaTime) {
-  auto deltaVelocity = velocity * (deltaTime / 8.0F);
+void Particle::update(float dt) {
+  // Move
+  GameObject::update(dt);
 
   // Behaviour
-  if (behaviour == ParticleBehaviour::EXPLODE) {
-    transform.position += deltaVelocity;
-    velocity -= deltaVelocity / 10.0F;
-  } else if (behaviour == ParticleBehaviour::FIRE) {
-    transform.position += deltaVelocity;
-    velocity -= deltaVelocity * 0.05F;
-  }
+  const float drag =
+      behaviour == ParticleBehaviour::EXPLODE ? EXPLODE_DRAG : FIRE_DRAG;
+  body.velocity *= std::exp(-drag * dt);
 
   // Die on collision
-  // for (auto& obj : scene->getObjectView<Barrier>()) {
+  // for (auto& obj : scene->get_object_view<Barrier>()) {
   //   if (transform.collides(obj->transform)) {
   //     alive = false;
   //   }
   // }
 
   // Die
-  if (asw::random::between(0, life) < (deltaTime / 8.0F)) {
+  if (asw::random::chance(dt / life)) {
     alive = false;
   }
 }
@@ -70,10 +75,10 @@ void Particle::draw() {
       asw::draw::point(transform.position, color);
       break;
     case ParticleType::SQUARE:
-      asw::draw::rectFill(transform, color);
+      asw::draw::rect_fill(transform, color);
       break;
     case ParticleType::CIRCLE:
-      asw::draw::circleFill(transform.position, transform.size.x, color);
+      asw::draw::circle_fill(transform.position, transform.size.x, color);
       break;
     default:
       break;

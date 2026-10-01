@@ -1,7 +1,5 @@
 #include "PowerUp.hpp"
 
-#include "../system/ImageRegistry.hpp"
-
 PowerUp::PowerUp(float x, float y, PowerUpType type) : type(type) {
   transform = asw::Quad<float>(x, y, 40.0F, 40.0F);
 
@@ -22,10 +20,9 @@ PowerUp::PowerUp(float x, float y, PowerUpType type) : type(type) {
       break;
   }
 
-  zIndex = 6;
+  z_index = 6;
 }
 
 void PowerUp::draw() {
-  asw::Texture image = ImageRegistry::getImage(imageKey);
-  asw::draw::sprite(image, transform.position);
+  asw::draw::sprite(asw::assets::get_texture(imageKey), transform.position);
 }
